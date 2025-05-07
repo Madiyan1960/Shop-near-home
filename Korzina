@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Магазин у дома</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    .product { margin-bottom: 10px; }
+    .btn { padding: 6px 12px; background: #2196f3; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    #cart { margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px; }
+    input, textarea { width: 100%; margin: 5px 0; padding: 8px; box-sizing: border-box; }
+    #order-form { display: none; margin-top: 20px; }
+  </style>
+</head>
+<body>
+
+<h2>Магазин у дома</h2>
+
+<div class="product">
+  🥛 Молоко - 450 ₸ <button class="btn" onclick="addToCart('Молоко', 450)">В корзину</button>
+</div>
+<div class="product">
+  🍞 Хлеб - 250 ₸ <button class="btn" onclick="addToCart('Хлеб', 250)">В корзину</button>
+</div>
+<div class="product">
+  🍎 Яблоки - 600 ₸ <button class="btn" onclick="addToCart('Яблоки', 600)">В корзину</button>
+</div>
+
+<div id="cart">
+  <h3>🛒 Корзина</h3>
+  <ul id="cart-items"></ul>
+  <p><strong>Итого:</strong> <span id="total">0</span> ₸</p>
+  <button class="btn" onclick="showOrderForm()">Оформить заказ</button>
+</div>
+
+<div id="order-form">
+  <h3>📋 Оформление заказа</h3>
+  <input type="text" id="name" placeholder="Ваше имя">
+  <input type="text" id="phone" placeholder="Телефон">
+  <textarea id="address" placeholder="Адрес доставки"></textarea>
+  <button class="btn" onclick="submitOrder()">Отправить</button>
+</div>
+
+<script>
+  const cart = [];
+
+  function addToCart(name, price) {
+    cart.push({ name, price });
+    updateCart();
+  }
+
+  function updateCart() {
+    const cartList = document.getElementById('cart-items');
+    cartList.innerHTML = '';
+    let total = 0;
+    cart.forEach(item => {
+      const li = document.createElement('li');
+      li.textContent = `${item.name} - ${item.price} ₸`;
+      cartList.appendChild(li);
+      total += item.price;
+    });
+    document.getElementById('total').textContent = total;
+  }
+
+  function showOrderForm() {
+    if (cart.length === 0) {
+      alert("Корзина пуста!");
+      return;
+    }
+    document.getElementById('order-form').style.display = 'block';
+  }
+
+  function submitOrder() {
+    const name = document.getElementById('name').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const address = document.getElementById('address').value.trim();
+
+    if (!name || !phone || !address) {
+      alert("Пожалуйста, заполните все поля.");
+      return;
+    }
+
+    let message = `🛒 Новый заказ:\nИмя: ${name}\nТелефон: ${phone}\nАдрес: ${address}\n\n`;
+    cart.forEach(item => {
+      message += `• ${item.name} - ${item.price} ₸\n`;
+    });
+    message += `\nИтого: ${document.getElementById('total').textContent} ₸`;
+
+    alert("Заказ отправлен!\n\n" + message);
+    // Можно добавить отправку в Telegram, Google Sheets и т.д.
+  }
+</script>
+
+</body>
+</html>
