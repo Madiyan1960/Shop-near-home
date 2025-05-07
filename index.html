@@ -1,83 +1,70 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Магазин у дома</title>
-  <link rel="manifest" href="manifest.json" />
-  <style>
-    body { font-family: sans-serif; margin: 1rem; background: #f4f4f4; }
-    h1 { text-align: center; color: #2e7d32; }
-    .product-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
-    .product { background: white; padding: 1rem; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); position: relative; }
-    .product img { width: 100%; height: 150px; object-fit: cover; border-radius: 8px; }
-    .product h3 { margin: 0.5rem 0 0.2rem; }
-    .product p { margin: 0; color: #555; }
-    .add-btn { margin-top: 0.5rem; padding: 0.4rem 0.6rem; background: #2e7d32; color: white; border: none; border-radius: 6px; cursor: pointer; }
-    #cart-button { position: fixed; top: 1rem; right: 1rem; background: #388e3c; color: white; border: none; padding: 0.6rem 1rem; border-radius: 8px; cursor: pointer; z-index: 100; }
-    #cart-modal { display: none; position: fixed; top: 60px; right: 20px; background: white; border: 1px solid #ccc; padding: 1rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); max-width: 300px; z-index: 1000; }
-    #cart-items p { margin: 0.5rem 0; }
-  </style>
-</head>
-<body>
-  <h1>Магазин у дома</h1>
-  <button id="cart-button">Корзина (0)</button>
-  <div id="cart-modal">
-    <h3>Корзина</h3>
-    <div id="cart-items"></div>
-  </div>
-  <div id="product-list" class="product-list"></div>
+<script>
+  const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQoChjmnMdjDn-siHAEHrBpDaz-3tkFx68Peo1LXU_Nc8R5XTm5Gee2pi-O9jz1XyYhhCGCDnTKa0cR/pub?gid=0&single=true&output=csv";
 
-  <script>
-    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQoChjmnMdjDn-siHAEHrBpDaz-3tkFx68Peo1LXU_Nc8R5XTm5Gee2pi-O9jz1XyYhhCGCDnTKa0cR/pub?gid=0&single=true&output=csv";
+  let cart = [];
 
-    let cart = [];
+  function saveCart() {
+    localStorage.setItem("cart", JSON.stringify(cart));
+  }
 
-    function updateCartButton() {
-      document.getElementById("cart-button").textContent = `Корзина (${cart.length})`;
+  function loadCart() {
+    const data = localStorage.getItem("cart");
+    if (data) {
+      try {
+        cart = JSON.parse(data);
+      } catch (e) {
+        cart = [];
+      }
     }
+  }
 
-    function showCart() {
-      const modal = document.getElementById("cart-modal");
-      modal.style.display = modal.style.display === "block" ? "none" : "block";
-      const container = document.getElementById("cart-items");
-      container.innerHTML = cart.map(p => `<p>${p.name} - ${p.price}</p>`).join("");
-    }
+  function updateCartButton() {
+    document.getElementById("cart-button").textContent = `Корзина (${cart.length})`;
+  }
 
-    async function loadProductsFromCSV() {
-      const res = await fetch(CSV_URL);
-      const text = await res.text();
-      const lines = text.trim().split("\n");
-      const products = lines.slice(1).map(line => {
-        const [name, price, image] = line.split(",");
-        return { name, price, image };
+  function showCart() {
+    const modal = document.getElementById("cart-modal");
+    modal.style.display = modal.style.display === "block" ? "none" : "block";
+    const container = document.getElementById("cart-items");
+    container.innerHTML = cart.map(p => `<p>${p.name} - ${p.price}</p>`).join("");
+  }
+
+  async function loadProductsFromCSV() {
+    const res = await fetch(CSV_URL);
+    const text = await res.text();
+    const lines = text.trim().split("\n");
+    const products = lines.slice(1).map(line => {
+      const [name, price, image] = line.split(",");
+      return { name, price, image };
+    });
+
+    const list = document.getElementById("product-list");
+    list.innerHTML = "";
+    products.forEach(p => {
+      const el = document.createElement("div");
+      el.className = "product";
+      el.innerHTML = `
+        <img src="${p.image}" alt="${p.name}">
+        <h3>${p.name}</h3>
+        <p>${p.price}</p>
+        <button class="add-btn">Добавить</button>
+      `;
+      el.querySelector(".add-btn").addEventListener("click", () => {
+        cart.push(p);
+        saveCart();
+        updateCartButton();
       });
+      list.appendChild(el);
+    });
+  }
 
-      const list = document.getElementById("product-list");
-      list.innerHTML = "";
-      products.forEach(p => {
-        const el = document.createElement("div");
-        el.className = "product";
-        el.innerHTML = `
-          <img src="${p.image}" alt="${p.name}">
-          <h3>${p.name}</h3>
-          <p>${p.price}</p>
-          <button class="add-btn">Добавить</button>
-        `;
-        el.querySelector(".add-btn").addEventListener("click", () => {
-          cart.push(p);
-          updateCartButton();
-        });
-        list.appendChild(el);
-      });
-    }
+  // Инициализация
+  loadCart();
+  updateCartButton();
+  document.getElementById("cart-button").addEventListener("click", showCart);
+  loadProductsFromCSV();
 
-    document.getElementById("cart-button").addEventListener("click", showCart);
-    loadProductsFromCSV();
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js');
-    }
-  </script>
-</body>
-</html>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js');
+  }
+</script>
