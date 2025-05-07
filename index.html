@@ -60,12 +60,43 @@
     document.getElementById("cart-button").textContent = `Корзина (${getTotalCount()})`;
   }
 
-  function showCart() {
-    const modal = document.getElementById("cart-modal");
-    modal.style.display = modal.style.display === "block" ? "none" : "block";
-    const container = document.getElementById("cart-items");
-    container.innerHTML = cart.map(p => `<p>${p.name} (${p.count} × ${p.price})</p>`).join("");
+ function showCart() {
+  const modal = document.getElementById("cart-modal");
+  modal.style.display = modal.style.display === "block" ? "none" : "block";
+
+  const container = document.getElementById("cart-items");
+  container.innerHTML = "";
+
+  cart.forEach((p, index) => {
+    const item = document.createElement("div");
+    item.innerHTML = `
+      <p>
+        ${p.name} – ${p.price} × ${p.count}
+        <button onclick="changeCount(${index}, 1)">+</button>
+        <button onclick="changeCount(${index}, -1)">−</button>
+        <button onclick="removeItem(${index})">🗑</button>
+      </p>
+    `;
+    container.appendChild(item);
+  });
+}
+function changeCount(index, delta) {
+  cart[index].count += delta;
+  if (cart[index].count <= 0) {
+    cart.splice(index, 1);
   }
+  saveCart();
+  updateCartButton();
+  showCart(); // обновим отображение
+}
+
+function removeItem(index) {
+  cart.splice(index, 1);
+  saveCart();
+  updateCartButton();
+  showCart(); // обновим отображение
+}
+
 
   async function loadProductsFromCSV() {
     const res = await fetch(CSV_URL);
@@ -110,6 +141,8 @@
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('service-worker.js');
   }
+
+    
 </script>
  
 </body>
