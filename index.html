@@ -77,9 +77,20 @@
         <button onclick="removeItem(${index})">🗑</button>
       </p>
     `;
-    container.appendChild(item);
+    const total = getTotalPrice();
+  const totalDiv = document.createElement("div");
+  totalDiv.innerHTML = `<hr><strong>Итого: ${total} ₸</strong>`;
+  container.appendChild(totalDiv);
+        
   });
 }
+
+  
+
+
+
+
+    
 function changeCount(index, delta) {
   cart[index].count += delta;
   if (cart[index].count <= 0) {
@@ -141,6 +152,12 @@ function removeItem(index) {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('service-worker.js');
   }
+function getTotalPrice() {
+  return cart.reduce((sum, item) => {
+    const price = parseInt(item.price.replace(/\D/g, ""), 10); // убираем всё, кроме цифр
+    return sum + price * item.count;
+  }, 0);
+}
 
     
 </script>
