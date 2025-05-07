@@ -159,6 +159,32 @@ function getTotalPrice() {
     return sum + price * item.count;
   }, 0);
 }
+// Увеличивает или уменьшает количество товара
+function changeCount(index, delta) {
+  cart[index].count += delta;
+  if (cart[index].count <= 0) {
+    cart.splice(index, 1); // удаляем товар, если стало 0
+  }
+  saveCart();          // сохраняем
+  updateCartButton();  // обновляем кнопку "Корзина"
+  showCart();          // обновляем окно корзины
+}
+
+// Удаляет товар полностью
+function removeItem(index) {
+  cart.splice(index, 1);  // удаляем по номеру
+  saveCart();
+  updateCartButton();
+  showCart();
+}
+
+// Считает итоговую сумму
+function getTotalPrice() {
+  return cart.reduce((sum, item) => {
+    const price = parseInt(item.price.replace(/\D/g, ""), 10); // берём только цифры из "250 ₸"
+    return sum + price * item.count;
+  }, 0);
+}
 
     
 </script>
