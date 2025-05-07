@@ -185,6 +185,12 @@ function getTotalPrice() {
     return sum + price * item.count;
   }, 0);
 }
+function clearCart() {
+  cart = []; // очищаем массив
+  saveCart(); // сохраняем пустую корзину
+  updateCartButton(); // обновляем кнопку "Корзина"
+  showCart(); // перерисовываем окно
+}
 
     
 </script>
