@@ -82,9 +82,14 @@
 
   const total = getTotalPrice();
   const totalDiv = document.createElement("div");
-  totalDiv.innerHTML = `<hr><strong>Итого: ${total} ₸</strong>`;
+  totalDiv.innerHTML = `
+    <hr>
+    <strong>Итого: ${total} ₸</strong><br><br>
+    <button onclick="clearCart()">🧹 Очистить корзину</button>
+  `;
   container.appendChild(totalDiv);
 }
+  
 
   
 
