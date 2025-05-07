@@ -38,15 +38,19 @@
   }
 
   function loadCart() {
-    const data = localStorage.getItem("cart");
-    if (data) {
-      try {
-        cart = JSON.parse(data);
-      } catch (e) {
-        cart = [];
-      }
+  const data = localStorage.getItem("cart");
+  if (data) {
+    try {
+      cart = JSON.parse(data).map(item => ({
+        ...item,
+        count: item.count ?? 1 // если count нет — ставим 1
+      }));
+    } catch (e) {
+      cart = [];
     }
   }
+}
+
 
   function getTotalCount() {
     return cart.reduce((sum, item) => sum + item.count, 0);
