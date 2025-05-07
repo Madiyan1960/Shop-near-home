@@ -30,9 +30,8 @@
 
   <script>
     const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQoChjmnMdjDn-siHAEHrBpDaz-3tkFx68Peo1LXU_Nc8R5XTm5Gee2pi-O9jz1XyYhhCGCDnTKa0cR/pub?gid=0&single=true&output=csv";
-
-  
-  let cart = [];
+ 
+ let cart = [];
 
   function saveCart() {
     localStorage.setItem("cart", JSON.stringify(cart));
@@ -49,15 +48,19 @@
     }
   }
 
+  function getTotalCount() {
+    return cart.reduce((sum, item) => sum + item.count, 0);
+  }
+
   function updateCartButton() {
-    document.getElementById("cart-button").textContent = `Корзина (${cart.length})`;
+    document.getElementById("cart-button").textContent = `Корзина (${getTotalCount()})`;
   }
 
   function showCart() {
     const modal = document.getElementById("cart-modal");
     modal.style.display = modal.style.display === "block" ? "none" : "block";
     const container = document.getElementById("cart-items");
-    container.innerHTML = cart.map(p => `<p>${p.name} - ${p.price}</p>`).join("");
+    container.innerHTML = cart.map(p => `<p>${p.name} (${p.count} × ${p.price})</p>`).join("");
   }
 
   async function loadProductsFromCSV() {
@@ -81,7 +84,12 @@
         <button class="add-btn">Добавить</button>
       `;
       el.querySelector(".add-btn").addEventListener("click", () => {
-        cart.push(p);
+        const existing = cart.find(item => item.name === p.name);
+        if (existing) {
+          existing.count += 1;
+        } else {
+          cart.push({ ...p, count: 1 });
+        }
         saveCart();
         updateCartButton();
       });
@@ -99,7 +107,6 @@
     navigator.serviceWorker.register('service-worker.js');
   }
 </script>
-
-  </script>
+ 
 </body>
 </html>
