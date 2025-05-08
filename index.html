@@ -204,10 +204,13 @@ function openPreFilledForm() {
   const name = document.getElementById("name").value;
   const phone = document.getElementById("phone").value;
   const address = document.getElementById("address").value;
-  const order = cart.map(p => `${p.name} × ${p.count}`).join(", ");
+ 
+   // Изменяем строку заказа, чтобы включать цену каждого товара
+  const order = cart.map(p => `${p.name} (${p.price}) × ${p.count}`).join(", ");
   const total = getTotalPrice();
   const status = "Оформлен";
-
+  
+  
   if (!name || !phone || !address) {
     alert("Заполните имя, телефон и адрес.");
     return;
