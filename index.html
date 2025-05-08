@@ -90,6 +90,11 @@
     <button onclick="clearCart()">🧹 Очистить корзину</button>
   `;
   container.appendChild(totalDiv);
+   // 👉 Добавляем кнопку отправки
+  const sendBtn = document.createElement("button");
+  sendBtn.textContent = "Отправить заказ";
+  sendBtn.onclick = openPreFilledForm;
+  cartElement.appendChild(sendBtn);
 }
   
 
