@@ -22,232 +22,201 @@
 <body>
   <h1>Магазин у дома</h1>
   <button id="cart-button">Корзина (0)</button>
-    <div id="cart-modal">
+
+  <div id="cart-modal">
     <h3>Корзина</h3>
     <div id="cart-items"></div>
-      <!-- Добавляем поля для ввода данных покупателя -->
-    <p><label for="name">Имя:</label><input type="text" id="name" /></p>
-<p><label for="phone">Телефон:</label><input type="text" id="phone" /></p>
-<p><label for="address">Адрес:</label><input type="text" id="address" /></p>
 
-     
+    <p><label for="name">Имя:</label><input type="text" id="name" /></p>
+    <p><label for="phone">Телефон:</label><input type="text" id="phone" /></p>
+    <p><label for="address">Адрес:</label><input type="text" id="address" /></p>
+    
+    <p><label for="saved-user">Сохранённые данные:</label>
+      <select id="saved-user"></select>
+    </p>
+
     <button onclick="openPreFilledForm()">Отправить заказ</button>
   </div>
-  <div id="product-list" class="product-list"></div>
-  
-  
 
- 
+  <div id="product-list" class="product-list"></div>
+
   <script>
     const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQoChjmnMdjDn-siHAEHrBpDaz-3tkFx68Peo1LXU_Nc8R5XTm5Gee2pi-O9jz1XyYhhCGCDnTKa0cR/pub?gid=0&single=true&output=csv";
- 
- let cart = [];
+    let cart = [];
 
-  function saveCart() {
-    localStorage.setItem("cart", JSON.stringify(cart));
-  }
-
-  function loadCart() {
-  const data = localStorage.getItem("cart");
-  if (data) {
-    try {
-      cart = JSON.parse(data).map(item => ({
-        ...item,
-        count: item.count ?? 1 // если count нет — ставим 1
-      }));
-    } catch (e) {
-      cart = [];
+    function saveCart() {
+      localStorage.setItem("cart", JSON.stringify(cart));
     }
-  }
-}
 
-  function getTotalCount() {
-    return cart.reduce((sum, item) => sum + item.count, 0);
-  }
-
-  function updateCartButton() {
-    document.getElementById("cart-button").textContent = `Корзина (${getTotalCount()})`;
-  }
-
- function showCart() {
-  const modal = document.getElementById("cart-modal");
-  modal.style.display = modal.style.display === "block" ? "none" : "block";
-
-  const container = document.getElementById("cart-items");
-  container.innerHTML = "";
-
-  cart.forEach((p, index) => {
-    const item = document.createElement("div");
-    item.innerHTML = `
-      <p>
-        ${p.name} – ${p.price} × ${p.count}
-        <button onclick="changeCount(${index}, 1)">+</button>
-        <button onclick="changeCount(${index}, -1)">−</button>
-        <button onclick="removeItem(${index})">🗑</button>
-      </p>
-    `;
-    container.appendChild(item);
- 
-  const total = getTotalPrice();
-  const totalDiv = document.createElement("div");
-  totalDiv.innerHTML = `
-    <hr>
-    <strong>Итого: ${total} ₸</strong><br><br>
-    <button onclick="clearCart()">🧹 Очистить корзину</button>
-  `;
-  container.appendChild(totalDiv);
-   // 👉 Добавляем кнопку отправки
-  
-}
-   
-
-  saveCart();
-  updateCartButton();
-  showCart(); // обновим отображение
-}
-
-function removeItem(index) {
-  cart.splice(index, 1);
-  saveCart();
-  updateCartButton();
-  showCart(); // обновим отображение
-}
-
-
-  async function loadProductsFromCSV() {
-    const res = await fetch(CSV_URL);
-    const text = await res.text();
-    const lines = text.trim().split("\n");
-    const products = lines.slice(1).map(line => {
-      const [name, price, image] = line.split(",");
-      return { name, price, image };
-    });
-
-    const list = document.getElementById("product-list");
-    list.innerHTML = "";
-    products.forEach(p => {
-      const el = document.createElement("div");
-      el.className = "product";
-      el.innerHTML = `
-        <img src="${p.image}" alt="${p.name}">
-        <h3>${p.name}</h3>
-        <p>${p.price}</p>
-        <button class="add-btn">Добавить</button>
-      `;
-      el.querySelector(".add-btn").addEventListener("click", () => {
-        const existing = cart.find(item => item.name === p.name);
-        if (existing) {
-          existing.count += 1;
-        } else {
-          cart.push({ ...p, count: 1 });
+    function loadCart() {
+      const data = localStorage.getItem("cart");
+      if (data) {
+        try {
+          cart = JSON.parse(data).map(item => ({
+            ...item,
+            count: item.count ?? 1
+          }));
+        } catch (e) {
+          cart = [];
         }
-        saveCart();
-        updateCartButton();
+      }
+    }
+
+    function getTotalCount() {
+      return cart.reduce((sum, item) => sum + item.count, 0);
+    }
+
+    function updateCartButton() {
+      document.getElementById("cart-button").textContent = `Корзина (${getTotalCount()})`;
+    }
+
+    function showCart() {
+      const modal = document.getElementById("cart-modal");
+      modal.style.display = modal.style.display === "block" ? "none" : "block";
+
+      const container = document.getElementById("cart-items");
+      container.innerHTML = "";
+
+      cart.forEach((p, index) => {
+        const item = document.createElement("div");
+        item.innerHTML = `
+          <p>
+            ${p.name} – ${p.price} × ${p.count}
+            <button onclick="changeCount(${index}, 1)">+</button>
+            <button onclick="changeCount(${index}, -1)">−</button>
+            <button onclick="removeItem(${index})">🗑</button>
+          </p>
+        `;
+        container.appendChild(item);
       });
-      list.appendChild(el);
-    });
-  }
 
-  // Инициализация
-  loadCart();
-  updateCartButton();
-  document.getElementById("cart-button").addEventListener("click", showCart);
-  loadProductsFromCSV();
+      const total = getTotalPrice();
+      const totalDiv = document.createElement("div");
+      totalDiv.innerHTML = `
+        <hr>
+        <strong>Итого: ${total} ₸</strong><br><br>
+        <button onclick="clearCart()">🧹 Очистить корзину</button>
+      `;
+      container.appendChild(totalDiv);
+    }
 
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('service-worker.js');
-  }
-function getTotalPrice() {
-  return cart.reduce((sum, item) => {
-    const price = parseInt(item.price.replace(/\D/g, ""), 10); // убираем всё, кроме цифр
-    return sum + price * item.count;
-  }, 0);
-}
-// Увеличивает или уменьшает количество товара
-function changeCount(index, delta) {
-  cart[index].count += delta;
-  if (cart[index].count <= 0) {
-    cart.splice(index, 1); // удаляем товар, если стало 0
-  }
-  saveCart();          // сохраняем
-  updateCartButton();  // обновляем кнопку "Корзина"
-  showCart();          // обновляем окно корзины
-}
+    function changeCount(index, delta) {
+      cart[index].count += delta;
+      if (cart[index].count <= 0) {
+        cart.splice(index, 1);
+      }
+      saveCart();
+      updateCartButton();
+      showCart();
+    }
 
-// Удаляет товар полностью
-function removeItem(index) {
-  cart.splice(index, 1);  // удаляем по номеру
-  saveCart();
-  updateCartButton();
-  showCart();
-}
+    function removeItem(index) {
+      cart.splice(index, 1);
+      saveCart();
+      updateCartButton();
+      showCart();
+    }
 
-// Считает итоговую сумму
-function getTotalPrice() {
-  return cart.reduce((sum, item) => {
-    const price = parseInt(item.price.replace(/\D/g, ""), 10); // берём только цифры из "250 ₸"
-    return sum + price * item.count;
-  }, 0);
-}
-function clearCart() {
-  cart = []; // очищаем массив
-  saveCart(); // сохраняем пустую корзину
-  updateCartButton(); // обновляем кнопку "Корзина"
-  showCart(); // перерисовываем окно
-}
-    // Загрузить сохраненные данные
-function loadUserData() {
-  const savedData = JSON.parse(localStorage.getItem("userData"));
-  const userSelect = document.getElementById("saved-user");
+    function getTotalPrice() {
+      return cart.reduce((sum, item) => {
+        const price = parseInt(item.price.replace(/\D/g, ""), 10);
+        return sum + price * item.count;
+      }, 0);
+    }
 
-  if (savedData) {
-    savedData.forEach(user => {
-      const option = document.createElement("option");
-      option.value = user.name;
-      option.textContent = `${user.name} - ${user.phone} - ${user.address}`;
-      userSelect.appendChild(option);
-    });
-  }
-}
+    function clearCart() {
+      cart = [];
+      saveCart();
+      updateCartButton();
+      showCart();
+    }
 
+    async function loadProductsFromCSV() {
+      const res = await fetch(CSV_URL);
+      const text = await res.text();
+      const lines = text.trim().split("\n");
+      const products = lines.slice(1).map(line => {
+        const [name, price, image] = line.split(",");
+        return { name, price, image };
+      });
 
+      const list = document.getElementById("product-list");
+      list.innerHTML = "";
+      products.forEach(p => {
+        const el = document.createElement("div");
+        el.className = "product";
+        el.innerHTML = `
+          <img src="${p.image}" alt="${p.name}">
+          <h3>${p.name}</h3>
+          <p>${p.price}</p>
+          <button class="add-btn">Добавить</button>
+        `;
+        el.querySelector(".add-btn").addEventListener("click", () => {
+          const existing = cart.find(item => item.name === p.name);
+          if (existing) {
+            existing.count += 1;
+          } else {
+            cart.push({ ...p, count: 1 });
+          }
+          saveCart();
+          updateCartButton();
+        });
+        list.appendChild(el);
+      });
+    }
 
-});
+    function loadUserData() {
+      const savedData = JSON.parse(localStorage.getItem("userData"));
+      const userSelect = document.getElementById("saved-user");
 
-// Загрузить данные при старте страницы
-loadUserData();
+      if (savedData && userSelect) {
+        savedData.forEach(user => {
+          const option = document.createElement("option");
+          option.value = user.name;
+          option.textContent = `${user.name} - ${user.phone} - ${user.address}`;
+          userSelect.appendChild(option);
+        });
+      }
+    }
 
-function openPreFilledForm() {
-  const name = document.getElementById("name").value;
-  const phone = document.getElementById("phone").value;
-  const address = document.getElementById("address").value;
- 
-   // Изменяем строку заказа, чтобы включать цену каждого товара
-  const order = cart.map(p => `${p.name} (${p.price}) × ${p.count}`).join(", ");
-  const total = getTotalPrice();
-  const status = "Оформлен";
-  
-  
-  if (!name || !phone || !address) {
-    alert("Заполните имя, телефон и адрес.");
-    return;
-  }
+    function openPreFilledForm() {
+      const name = document.getElementById("name").value;
+      const phone = document.getElementById("phone").value;
+      const address = document.getElementById("address").value;
 
-  const base = "https://docs.google.com/forms/d/e/1FAIpQLSegQ5wqbLaMU094d5y1EqfGDYedlBa362BoqFeBfA-RXiAQqg/viewform";
-  const params = new URLSearchParams({
-    "entry.1735845883": name,
-    "entry.422081956": phone,
-    "entry.1694441696": address,
-    "entry.1899533559": order,
-    "entry.315266378": total,
-    "entry.1207854373": status
-  });
+      if (!name || !phone || !address) {
+        alert("Заполните имя, телефон и адрес.");
+        return;
+      }
 
-  window.open(`${base}?${params.toString()}`, "_blank");
-}
+      const order = cart.map(p => `${p.name} (${p.price}) × ${p.count}`).join(", ");
+      const total = getTotalPrice();
+      const status = "Оформлен";
 
-    
-</script>
- 
+      const base = "https://docs.google.com/forms/d/e/1FAIpQLSegQ5wqbLaMU094d5y1EqfGDYedlBa362BoqFeBfA-RXiAQqg/viewform";
+      const params = new URLSearchParams({
+        "entry.1735845883": name,
+        "entry.422081956": phone,
+        "entry.1694441696": address,
+        "entry.1899533559": order,
+        "entry.315266378": total,
+        "entry.1207854373": status
+      });
+
+      window.open(`${base}?${params.toString()}`, "_blank");
+    }
+
+    // Инициализация
+    loadCart();
+    updateCartButton();
+    loadProductsFromCSV();
+    loadUserData();
+
+    document.getElementById("cart-button").addEventListener("click", showCart);
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
+  </script>
 </body>
 </html>
