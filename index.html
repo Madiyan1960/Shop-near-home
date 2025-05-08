@@ -196,6 +196,31 @@ function clearCart() {
   updateCartButton(); // обновляем кнопку "Корзина"
   showCart(); // перерисовываем окно
 }
+function openPreFilledForm() {
+  const name = document.getElementById("name").value;
+  const phone = document.getElementById("phone").value;
+  const address = document.getElementById("address").value;
+  const order = cart.map(p => `${p.name} × ${p.count}`).join(", ");
+  const total = getTotalPrice();
+  const status = "Оформлен";
+
+  if (!name || !phone || !address) {
+    alert("Заполните имя, телефон и адрес.");
+    return;
+  }
+
+  const base = "https://docs.google.com/forms/d/e/1FAIpQLSegQ5wqbLaMU094d5y1EqfGDYedlBa362BoqFeBfA-RXiAQqg/viewform";
+  const params = new URLSearchParams({
+    "entry.1735845883": name,
+    "entry.422081956": phone,
+    "entry.1694441696": address,
+    "entry.1899533559": order,
+    "entry.315266378": total,
+    "entry.1207854373": status
+  });
+
+  window.open(`${base}?${params.toString()}`, "_blank");
+}
 
     
 </script>
