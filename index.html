@@ -216,11 +216,13 @@
     document.getElementById("cart-button").addEventListener("click", showCart);
 
 
+    
+  </script>
+    <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('service-worker.js')
         .then(() => console.log("Service Worker зарегистрирован"));
     }
   </script>
-    
 </body>
 </html>
