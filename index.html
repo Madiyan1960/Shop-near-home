@@ -19,6 +19,12 @@
     #cart-items p { margin: 0.5rem 0; }
   </style>
 </head>
+  <script>
+  window.addEventListener('beforeinstallprompt', e => {
+    console.log("✅ beforeinstallprompt fired");
+  });
+</script>
+
 <body>
   <h1>Магазин у дома</h1>
   <button id="cart-button">Корзина (0)</button>
