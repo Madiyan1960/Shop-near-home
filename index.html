@@ -87,8 +87,7 @@
       </p>
     `;
     container.appendChild(item);
-  });
-
+ 
   const total = getTotalPrice();
   const totalDiv = document.createElement("div");
   totalDiv.innerHTML = `
@@ -101,11 +100,7 @@
   
 }
    
-function changeCount(index, delta) {
-  cart[index].count += delta;
-  if (cart[index].count <= 0) {
-    cart.splice(index, 1);
-  }
+
   saveCart();
   updateCartButton();
   showCart(); // обновим отображение
