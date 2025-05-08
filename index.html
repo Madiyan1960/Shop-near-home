@@ -30,13 +30,7 @@
 <p><label for="phone">Телефон:</label><input type="text" id="phone" /></p>
 <p><label for="address">Адрес:</label><input type="text" id="address" /></p>
 
-      <p><label for="saved-user">Выберите данные:</label>
-  <select id="saved-user">
-    <option value="">Выберите...</option>
-  </select>
-</p>
-
-
+     
     <button onclick="openPreFilledForm()">Отправить заказ</button>
   </div>
   <div id="product-list" class="product-list"></div>
@@ -221,17 +215,8 @@ function loadUserData() {
   }
 }
 
-// Обработчик выбора данных
-document.getElementById("saved-user").addEventListener("change", function() {
-  const selectedUser = this.value;
-  const userData = JSON.parse(localStorage.getItem("userData"));
-  const user = userData.find(u => u.name === selectedUser);
-  
-  if (user) {
-    document.getElementById("name").value = user.name;
-    document.getElementById("phone").value = user.phone;
-    document.getElementById("address").value = user.address;
-  }
+
+
 });
 
 // Загрузить данные при старте страницы
