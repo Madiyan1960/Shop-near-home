@@ -27,14 +27,7 @@
     <div id="cart-items"></div>
   </div>
   <div id="product-list" class="product-list"></div>
-<p><label for="name">Имя:</label><input type="text" id="name" /></p>
-    <p><label for="phone">Телефон:</label><input type="text" id="phone" /></p>
-    <p><label for="address">Адрес:</label><input type="text" id="address" /></p>
 
-    <button onclick="openPreFilledForm()">Отправить заказ</button>
-  </div>
-
-  <div id="product-list" class="product-list"></div>
   <script>
     const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQoChjmnMdjDn-siHAEHrBpDaz-3tkFx68Peo1LXU_Nc8R5XTm5Gee2pi-O9jz1XyYhhCGCDnTKa0cR/pub?gid=0&single=true&output=csv";
  
@@ -95,10 +88,14 @@
   `;
   container.appendChild(totalDiv);
    // 👉 Добавляем кнопку отправки
-  const sendBtn = document.createElement("button");
-sendBtn.textContent = "Отправить заказ";
-sendBtn.onclick = openPreFilledForm;
-container.appendChild(sendBtn);
+  <p><label for="name">Имя:</label><input type="text" id="name" /></p>
+    <p><label for="phone">Телефон:</label><input type="text" id="phone" /></p>
+    <p><label for="address">Адрес:</label><input type="text" id="address" /></p>
+
+    <button onclick="openPreFilledForm()">Отправить заказ</button>
+  </div>
+
+  <div id="product-list" class="product-list"></div>
 }
    
 function changeCount(index, delta) {
