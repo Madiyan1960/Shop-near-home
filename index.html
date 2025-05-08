@@ -3,224 +3,90 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Магазин у дома</title>
-  <link rel="manifest" href="manifest.json" />
+  <title>Мой дом</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2196f3">
   <style>
-    body { font-family: sans-serif; margin: 1rem; background: #f4f4f4; }
-    h1 { text-align: center; color: #2e7d32; }
-    .product-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
-    .product { background: white; padding: 1rem; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); position: relative; }
-    .product img { width: 100%; height: 150px; object-fit: cover; border-radius: 8px; }
-    .product h3 { margin: 0.5rem 0 0.2rem; }
-    .product p { margin: 0; color: #555; }
-    .add-btn { margin-top: 0.5rem; padding: 0.4rem 0.6rem; background: #2e7d32; color: white; border: none; border-radius: 6px; cursor: pointer; }
-    #cart-button { position: fixed; top: 1rem; right: 1rem; background: #388e3c; color: white; border: none; padding: 0.6rem 1rem; border-radius: 8px; cursor: pointer; z-index: 100; }
-    #cart-modal { display: none; position: fixed; top: 60px; right: 20px; background: white; border: 1px solid #ccc; padding: 1rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); max-width: 300px; z-index: 1000; }
-    #cart-items p { margin: 0.5rem 0; }
+    body {
+      font-family: sans-serif;
+      margin: 5px;
+      padding: 5px;
+      text-align: center;
+    }
+
+    h2 {
+      margin-top: 10px;
+    }
+
+    /* Изображение адаптивное */
+    img {
+      max-width: 90%;
+      height: auto;
+      display: block;
+      margin: 5px auto;
+      border-radius: 5px;
+    }
+
+    .button-links {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .btn {
+  width: 90%;
+  max-width: 300px;
+  text-align: center;
+  margin: 5px 0;
+  padding: 12px 24px;
+  background-color: #2196f3;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 22px;
+  font-weight: bold;
+  transition: background-color 0.3s;
+  box-sizing: border-box;
+  text-shadow: 
+    -1px -1px 0 #000,  
+     1px -1px 0 #000,
+    -1px  1px 0 #000,
+     1px  1px 0 #000;
+    box-shadow: 4px 4px 6px rgba(0, 0, 0, 1);
+}
+
+    .btn:hover {
+      background-color: #1976d2;
+    }
+
+    @media (max-width: 480px) {
+      .btn {
+        font-size: 16px;
+        padding: 10px 20px;
+      }
+    }
   </style>
 </head>
-  
 <body>
-  <h1>Магазин у дома</h1>
-  <button id="cart-button">Корзина (0)</button>
+  <h2>Добро пожаловать в жилой массив "Лесная поляна" г.Косшы!</h2>
 
-  <div id="cart-modal">
-    <h3>Корзина</h3>
-    <div id="cart-items"></div>
+  <img src="background.jpg" alt="Фото">
 
-    <p><label for="name">Имя:</label><input type="text" id="name" /></p>
-    <p><label for="phone">Телефон:</label><input type="text" id="phone" /></p>
-    <p><label for="address">Адрес:</label><input type="text" id="address" /></p>
-    
-    <p><label for="saved-user">Сохранённые данные:</label>
-      <select id="saved-user"></select>
-    </p>
-
-    <button onclick="openPreFilledForm()">Отправить заказ</button>
+  <div class="button-links">
+    <a href="O nas.html" class="btn">О нас</a>
+    <a href="news.html" class="btn">Новости</a>
+    <a href="Galereya.html" class="btn">Галерея</a>
+    <a href="feedback.html" class="btn">Написать отзыв</a>
+    <a href="Vashi otzivi i predlozheniya.html" class="btn">Отзывы посетителей</a>
+    <a href="contact.html" class="btn">Контакты</a>
   </div>
 
-  <div id="product-list" class="product-list"></div>
-
   <script>
-    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQoChjmnMdjDn-siHAEHrBpDaz-3tkFx68Peo1LXU_Nc8R5XTm5Gee2pi-O9jz1XyYhhCGCDnTKa0cR/pub?gid=0&single=true&output=csv";
-    let cart = [];
-
-    function saveCart() {
-      localStorage.setItem("cart", JSON.stringify(cart));
-    }
-
-    function loadCart() {
-      const data = localStorage.getItem("cart");
-      if (data) {
-        try {
-          cart = JSON.parse(data).map(item => ({
-            ...item,
-            count: item.count ?? 1
-          }));
-        } catch (e) {
-          cart = [];
-        }
-      }
-    }
-
-    function getTotalCount() {
-      return cart.reduce((sum, item) => sum + item.count, 0);
-    }
-
-    function updateCartButton() {
-      document.getElementById("cart-button").textContent = `Корзина (${getTotalCount()})`;
-    }
-
-    function showCart() {
-      const modal = document.getElementById("cart-modal");
-      modal.style.display = modal.style.display === "block" ? "none" : "block";
-
-      const container = document.getElementById("cart-items");
-      container.innerHTML = "";
-
-      cart.forEach((p, index) => {
-        const item = document.createElement("div");
-        item.innerHTML = `
-          <p>
-            ${p.name} – ${p.price} × ${p.count}
-            <button onclick="changeCount(${index}, 1)">+</button>
-            <button onclick="changeCount(${index}, -1)">−</button>
-            <button onclick="removeItem(${index})">🗑</button>
-          </p>
-        `;
-        container.appendChild(item);
-      });
-
-      const total = getTotalPrice();
-      const totalDiv = document.createElement("div");
-      totalDiv.innerHTML = `
-        <hr>
-        <strong>Итого: ${total} ₸</strong><br><br>
-        <button onclick="clearCart()">🧹 Очистить корзину</button>
-      `;
-      container.appendChild(totalDiv);
-    }
-
-    function changeCount(index, delta) {
-      cart[index].count += delta;
-      if (cart[index].count <= 0) {
-        cart.splice(index, 1);
-      }
-      saveCart();
-      updateCartButton();
-      showCart();
-    }
-
-    function removeItem(index) {
-      cart.splice(index, 1);
-      saveCart();
-      updateCartButton();
-      showCart();
-    }
-
-    function getTotalPrice() {
-      return cart.reduce((sum, item) => {
-        const price = parseInt(item.price.replace(/\D/g, ""), 10);
-        return sum + price * item.count;
-      }, 0);
-    }
-
-    function clearCart() {
-      cart = [];
-      saveCart();
-      updateCartButton();
-      showCart();
-    }
-
-    async function loadProductsFromCSV() {
-      const res = await fetch(CSV_URL);
-      const text = await res.text();
-      const lines = text.trim().split("\n");
-      const products = lines.slice(1).map(line => {
-        const [name, price, image] = line.split(",");
-        return { name, price, image };
-      });
-
-      const list = document.getElementById("product-list");
-      list.innerHTML = "";
-      products.forEach(p => {
-        const el = document.createElement("div");
-        el.className = "product";
-        el.innerHTML = `
-          <img src="${p.image}" alt="${p.name}">
-          <h3>${p.name}</h3>
-          <p>${p.price}</p>
-          <button class="add-btn">Добавить</button>
-        `;
-        el.querySelector(".add-btn").addEventListener("click", () => {
-          const existing = cart.find(item => item.name === p.name);
-          if (existing) {
-            existing.count += 1;
-          } else {
-            cart.push({ ...p, count: 1 });
-          }
-          saveCart();
-          updateCartButton();
-        });
-        list.appendChild(el);
-      });
-    }
-
-    function loadUserData() {
-      const savedData = JSON.parse(localStorage.getItem("userData"));
-      const userSelect = document.getElementById("saved-user");
-
-      if (savedData && userSelect) {
-        savedData.forEach(user => {
-          const option = document.createElement("option");
-          option.value = user.name;
-          option.textContent = `${user.name} - ${user.phone} - ${user.address}`;
-          userSelect.appendChild(option);
-        });
-      }
-    }
-
-    function openPreFilledForm() {
-      const name = document.getElementById("name").value;
-      const phone = document.getElementById("phone").value;
-      const address = document.getElementById("address").value;
-
-      if (!name || !phone || !address) {
-        alert("Заполните имя, телефон и адрес.");
-        return;
-      }
-
-      const order = cart.map(p => `${p.name} (${p.price}) × ${p.count}`).join(", ");
-      const total = getTotalPrice();
-      const status = "Оформлен";
-
-      const base = "https://docs.google.com/forms/d/e/1FAIpQLSegQ5wqbLaMU094d5y1EqfGDYedlBa362BoqFeBfA-RXiAQqg/viewform";
-      const params = new URLSearchParams({
-        "entry.1735845883": name,
-        "entry.422081956": phone,
-        "entry.1694441696": address,
-        "entry.1899533559": order,
-        "entry.315266378": total,
-        "entry.1207854373": status
-      });
-
-      window.open(`${base}?${params.toString()}`, "_blank");
-    }
-
-    // Инициализация
-    loadCart();
-    updateCartButton();
-    loadProductsFromCSV();
-    loadUserData();
-
-    document.getElementById("cart-button").addEventListener("click", showCart);
-
-
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('service-worker.js')
         .then(() => console.log("Service Worker зарегистрирован"));
     }
   </script>
-    
 </body>
 </html>
