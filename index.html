@@ -206,6 +206,37 @@ function clearCart() {
   updateCartButton(); // обновляем кнопку "Корзина"
   showCart(); // перерисовываем окно
 }
+    // Загрузить сохраненные данные
+function loadUserData() {
+  const savedData = JSON.parse(localStorage.getItem("userData"));
+  const userSelect = document.getElementById("saved-user");
+
+  if (savedData) {
+    savedData.forEach(user => {
+      const option = document.createElement("option");
+      option.value = user.name;
+      option.textContent = `${user.name} - ${user.phone} - ${user.address}`;
+      userSelect.appendChild(option);
+    });
+  }
+}
+
+// Обработчик выбора данных
+document.getElementById("saved-user").addEventListener("change", function() {
+  const selectedUser = this.value;
+  const userData = JSON.parse(localStorage.getItem("userData"));
+  const user = userData.find(u => u.name === selectedUser);
+  
+  if (user) {
+    document.getElementById("name").value = user.name;
+    document.getElementById("phone").value = user.phone;
+    document.getElementById("address").value = user.address;
+  }
+});
+
+// Загрузить данные при старте страницы
+loadUserData();
+
 function openPreFilledForm() {
   const name = document.getElementById("name").value;
   const phone = document.getElementById("phone").value;
