@@ -202,7 +202,7 @@
           const sanitizedPrice = p.price.replace(/,/g, " ");  // Заменяем запятые в цене товара
           return `${sanitizedName} (${sanitizedPrice}) × ${p.count}`;
         })
-        .join(", ");  // Соединяем товары в одну строку через запятую
+        .join(" ");  // Соединяем товары в одну строку через запятую
 
       const total = getTotalPrice();
       const status = "Оформлен";
