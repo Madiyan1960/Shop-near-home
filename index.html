@@ -181,16 +181,29 @@
     }
 
     function openPreFilledForm() {
-      const name = document.getElementById("name").value;
-      const phone = document.getElementById("phone").value;
-      const address = document.getElementById("address").value;
+      let name = document.getElementById("name").value;
+      let phone = document.getElementById("phone").value;
+      let address = document.getElementById("address").value;
 
       if (!name || !phone || !address) {
         alert("Заполните имя, телефон и адрес.");
         return;
       }
 
-      const order = cart.map(p => `${p.name} (${p.price}) × ${p.count}`).join(", ");
+      // Заменяем запятые в имени, телефоне, адресе и товарах
+      name = name.replace(/,/g, " ");
+      phone = phone.replace(/,/g, " ");
+      address = address.replace(/,/g, " ");
+
+      // Преобразуем список товаров и заменяем запятые
+      const order = cart
+        .map(p => {
+          const sanitizedName = p.name.replace(/,/g, " ");  // Заменяем запятые в названии товара
+          const sanitizedPrice = p.price.replace(/,/g, " ");  // Заменяем запятые в цене товара
+          return `${sanitizedName} (${sanitizedPrice}) × ${p.count}`;
+        })
+        .join(", ");  // Соединяем товары в одну строку через запятую
+
       const total = getTotalPrice();
       const status = "Оформлен";
 
@@ -214,11 +227,9 @@
     loadUserData();
 
     document.getElementById("cart-button").addEventListener("click", showCart);
-
-
-    
   </script>
-    <script>
+
+  <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('service-worker.js')
         .then(() => console.log("Service Worker зарегистрирован"));
