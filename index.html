@@ -19,7 +19,7 @@
     #cart-items p { margin: 0.5rem 0; }
   </style>
 </head>
-  
+
 <body>
   <h1>Магазин у дома</h1>
   <button id="cart-button">Корзина (0)</button>
@@ -29,9 +29,9 @@
     <div id="cart-items"></div>
 
     <p><label for="name">Имя:</label><input type="text" id="name" /></p>
-    <p><label for="phone">Телефон:</label><input type="text" id="phone" /></p>
+    <p><label for="phone">Телефон:</label><input type="text" id="phone" placeholder="8XXXXXXXXXX" /></p>
     <p><label for="address">Адрес:</label><input type="text" id="address" /></p>
-    
+
     <p><label for="saved-user">Сохранённые данные:</label>
       <select id="saved-user"></select>
     </p>
@@ -53,10 +53,7 @@
       const data = localStorage.getItem("cart");
       if (data) {
         try {
-          cart = JSON.parse(data).map(item => ({
-            ...item,
-            count: item.count ?? 1
-          }));
+          cart = JSON.parse(data).map(item => ({ ...item, count: item.count ?? 1 }));
         } catch (e) {
           cart = [];
         }
@@ -167,45 +164,56 @@
     }
 
     function loadUserData() {
-      const savedData = JSON.parse(localStorage.getItem("userData"));
+      const savedData = JSON.parse(localStorage.getItem("userData")) || [];
       const userSelect = document.getElementById("saved-user");
+      userSelect.innerHTML = "<option value=''>-- Выберите --</option>";
+      savedData.forEach(user => {
+        const option = document.createElement("option");
+        option.value = user.name;
+        option.textContent = `${user.name} - ${user.phone} - ${user.address}`;
+        userSelect.appendChild(option);
+      });
 
-      if (savedData && userSelect) {
-        savedData.forEach(user => {
-          const option = document.createElement("option");
-          option.value = user.name;
-          option.textContent = `${user.name} - ${user.phone} - ${user.address}`;
-          userSelect.appendChild(option);
-        });
-      }
+      userSelect.addEventListener("change", function () {
+        const selectedName = this.value;
+        const user = savedData.find(u => u.name === selectedName);
+        if (user) {
+          document.getElementById("name").value = user.name;
+          document.getElementById("phone").value = user.phone;
+          document.getElementById("address").value = user.address;
+        }
+      });
     }
 
     function openPreFilledForm() {
-      let name = document.getElementById("name").value;
-      let phone = document.getElementById("phone").value;
-      let address = document.getElementById("address").value;
+      let name = document.getElementById("name").value.trim();
+      let rawPhone = document.getElementById("phone").value.trim();
+      let address = document.getElementById("address").value.trim();
 
-      if (!name || !phone || !address) {
+      if (!name || !rawPhone || !address) {
         alert("Заполните имя, телефон и адрес.");
         return;
       }
 
-      // Заменяем запятые в имени, телефоне, адресе и товарах
+      if (!/^8\d{10}$/.test(rawPhone)) {
+        alert("Телефон должен быть в формате 8XXXXXXXXXX (11 цифр).");
+        return;
+      }
+
+      const phone = rawPhone;
       name = name.replace(/,/g, " ");
-      phone = phone.replace(/,/g, " ");
       address = address.replace(/,/g, " ");
 
-      // Преобразуем список товаров и заменяем запятые
-      const order = cart
-        .map(p => {
-          const sanitizedName = p.name.replace(/,/g, "<br> ");  // Заменяем запятые в названии товара
-          const sanitizedPrice = p.price.replace(/,/g, " ");  // Заменяем запятые в цене товара
-          return `${sanitizedName} (${sanitizedPrice}) × ${p.count}`;
-        })
-        .join("<br> ");  // Соединяем товары в одну строку через запятую
-
+      const order = cart.map(p => `${p.name.replace(/,/g, " ")} (${p.price.replace(/,/g, " ")}) × ${p.count}`).join("<br> ");
       const total = getTotalPrice();
       const status = "Оформлен";
+
+      let savedData = JSON.parse(localStorage.getItem("userData")) || [];
+      const existing = savedData.find(u => u.phone === phone);
+      if (!existing) {
+        savedData.push({ name, phone, address });
+        localStorage.setItem("userData", JSON.stringify(savedData));
+      }
 
       const base = "https://docs.google.com/forms/d/e/1FAIpQLSegQ5wqbLaMU094d5y1EqfGDYedlBa362BoqFeBfA-RXiAQqg/viewform";
       const params = new URLSearchParams({
@@ -220,13 +228,11 @@
       window.open(`${base}?${params.toString()}`, "_blank");
     }
 
-    // Инициализация
     loadCart();
     updateCartButton();
     loadProductsFromCSV();
     loadUserData();
     document.getElementById("cart-button").addEventListener("click", showCart);
-    
   </script>
 
   <script>
