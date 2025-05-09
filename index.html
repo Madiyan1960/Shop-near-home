@@ -14,15 +14,43 @@
     .product h3 { margin: 0.5rem 0 0.2rem; }
     .product p { margin: 0; color: #555; }
     .add-btn { margin-top: 0.5rem; padding: 0.4rem 0.6rem; background: #2e7d32; color: white; border: none; border-radius: 6px; cursor: pointer; }
-    #cart-button { position: fixed; top: 1rem; right: 1rem; background: #388e3c; color: white; border: none; padding: 0.6rem 1rem; border-radius: 8px; cursor: pointer; z-index: 100; }
-    #cart-modal { display: none; position: fixed; top: 60px; right: 20px; background: white; border: 1px solid #ccc; padding: 1rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); max-width: 350px; z-index: 1000; }
+
+    #cart-button {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      background: #388e3c;
+      color: white;
+      border: none;
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      z-index: 100;
+    }
+
+    #cart-modal {
+      display: none;
+      position: fixed;
+      top: 60px;
+      right: 20px;
+      background: white;
+      border: 1px solid #ccc;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      max-width: 350px;
+      max-height: 80vh; /* Ограничение высоты */
+      overflow-y: auto;  /* Прокрутка при переполнении */
+      z-index: 1000;
+    }
+
     #cart-items p { margin: 0.5rem 0; }
     #saved-users-list div { margin: 0.3rem 0; }
     #saved-users-list button { margin-top: 0.2rem; }
   </style>
 </head>
 
-  <body>
+<body>
   <h1>Магазин у дома</h1>
   <button id="cart-button">Корзина (0)</button>
 
@@ -225,7 +253,7 @@
       if (!existing) {
         savedData.push({ name, phone, address });
         localStorage.setItem("userData", JSON.stringify(savedData));
-        loadUserData(); // Обновим список
+        loadUserData();
       }
 
       const base = "https://docs.google.com/forms/d/e/1FAIpQLSegQ5wqbLaMU094d5y1EqfGDYedlBa362BoqFeBfA-RXiAQqg/viewform";
