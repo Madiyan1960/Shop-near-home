@@ -15,8 +15,10 @@
     .product p { margin: 0; color: #555; }
     .add-btn { margin-top: 0.5rem; padding: 0.4rem 0.6rem; background: #2e7d32; color: white; border: none; border-radius: 6px; cursor: pointer; }
     #cart-button { position: fixed; top: 1rem; right: 1rem; background: #388e3c; color: white; border: none; padding: 0.6rem 1rem; border-radius: 8px; cursor: pointer; z-index: 100; }
-    #cart-modal { display: none; position: fixed; top: 60px; right: 20px; background: white; border: 1px solid #ccc; padding: 1rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); max-width: 300px; z-index: 1000; }
+    #cart-modal { display: none; position: fixed; top: 60px; right: 20px; background: white; border: 1px solid #ccc; padding: 1rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); max-width: 350px; z-index: 1000; }
     #cart-items p { margin: 0.5rem 0; }
+    #saved-users-list div { margin: 0.3rem 0; }
+    #saved-users-list button { margin-top: 0.2rem; }
   </style>
 </head>
 
@@ -28,13 +30,11 @@
     <h3>Корзина</h3>
     <div id="cart-items"></div>
 
-    <p><label for="name">Имя:</label><input type="text" id="name" /></p>
-    <p><label for="phone">Телефон:</label><input type="text" id="phone" placeholder="8XXXXXXXXXX" /></p>
-    <p><label for="address">Адрес:</label><input type="text" id="address" /></p>
+    <p><label for="name">Имя:</label><br><input type="text" id="name" /></p>
+    <p><label for="phone">Телефон:</label><br><input type="text" id="phone" placeholder="8XXXXXXXXXX" /></p>
+    <p><label for="address">Адрес:</label><br><input type="text" id="address" /></p>
 
-    <p><label for="saved-user">Сохранённые данные:</label>
-      <select id="saved-user"></select>
-    </p>
+    <div id="saved-users-list"></div>
 
     <button onclick="openPreFilledForm()">Отправить заказ</button>
   </div>
@@ -165,24 +165,36 @@
 
     function loadUserData() {
       const savedData = JSON.parse(localStorage.getItem("userData")) || [];
-      const userSelect = document.getElementById("saved-user");
-      userSelect.innerHTML = "<option value=''>-- Выберите --</option>";
-      savedData.forEach(user => {
-        const option = document.createElement("option");
-        option.value = user.name;
-        option.textContent = `${user.name} - ${user.phone} - ${user.address}`;
-        userSelect.appendChild(option);
-      });
+      const list = document.getElementById("saved-users-list");
+      list.innerHTML = "<strong>Сохранённые пользователи:</strong><br>";
 
-      userSelect.addEventListener("change", function () {
-        const selectedName = this.value;
-        const user = savedData.find(u => u.name === selectedName);
-        if (user) {
-          document.getElementById("name").value = user.name;
-          document.getElementById("phone").value = user.phone;
-          document.getElementById("address").value = user.address;
-        }
+      savedData.forEach((user, index) => {
+        const div = document.createElement("div");
+        div.innerHTML = `
+          <button onclick="selectUser(${index})">${user.name} - ${user.phone} - ${user.address}</button>
+          <button onclick="deleteUser(${index})" style="margin-left: 0.5rem;">🗑</button>
+        `;
+        list.appendChild(div);
       });
+    }
+
+    function selectUser(index) {
+      const savedData = JSON.parse(localStorage.getItem("userData")) || [];
+      const user = savedData[index];
+      if (user) {
+        document.getElementById("name").value = user.name;
+        document.getElementById("phone").value = user.phone;
+        document.getElementById("address").value = user.address;
+      }
+    }
+
+    function deleteUser(index) {
+      let savedData = JSON.parse(localStorage.getItem("userData")) || [];
+      if (confirm(`Удалить пользователя ${savedData[index].name}?`)) {
+        savedData.splice(index, 1);
+        localStorage.setItem("userData", JSON.stringify(savedData));
+        loadUserData();
+      }
     }
 
     function openPreFilledForm() {
@@ -213,6 +225,7 @@
       if (!existing) {
         savedData.push({ name, phone, address });
         localStorage.setItem("userData", JSON.stringify(savedData));
+        loadUserData(); // Обновим список
       }
 
       const base = "https://docs.google.com/forms/d/e/1FAIpQLSegQ5wqbLaMU094d5y1EqfGDYedlBa362BoqFeBfA-RXiAQqg/viewform";
