@@ -14,7 +14,12 @@
     .product h3 { margin: 0.4rem 0 0.2rem;font-size: 0.9rem; }
     .product p { margin: 0;font-size: 0.85rem; color: #555; }
     .add-btn { margin-top: 0.4rem; padding: 0.3rem 0.5rem; background: #2e7d32; color: white; border: none; border-radius: 5px; cursor: pointer; }
-
+ /* Две колонки на мобильных устройствах */
+  @media (max-width: 600px) {
+    .product-list {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
     #cart-button {
       position: fixed;
       top: 1rem;
