@@ -2,168 +2,42 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Мини-магазин</title>
-  <style>
-    body { font-family: sans-serif; margin: 20px; }
-    .grid { display: flex; flex-wrap: wrap; gap: 10px; }
-    .product {
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 10px;
-      width: 160px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .product img { width: 100%; border-radius: 6px; }
-    .product button {
-      margin-top: auto;
-      background: #2e7d32;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .product button:hover { background: #1b5e20; }
-    #cart { margin-top: 20px; border-top: 1px dashed #999; padding-top: 10px; }
-    #order-form { margin-top: 20px; }
-    input, button { padding: 5px; margin: 5px 0; width: 300px; }
-    button:disabled {
-      background-color: gray;
-      cursor: not-allowed;
-    }
-    h3, h2 { margin-bottom: 10px; }
-  </style>
+  <title>Отправка заказа в Airtable</title>
 </head>
 <body>
+  <h2>Пример заказа</h2>
+  <button onclick="sendOrder()">Отправить заказ</button>
 
-  <h2>🛍️ Мини-магазин</h2>
-<div class="grid" id="products">Загрузка...</div>
+  <script>
+    async function sendOrder() {
+      const airtableApiKey = "patGuAAYxAKvFv2Ky.5bb726817659e039a92db48bba3d7de25c15e6c762b2e300dcfd6be3370e00e6";
+      const airtableBaseId = "appLj0ax0IDVaRTd4";
+      const airtableTableName = "Заказы";
 
-<h3>🧺 Корзина</h3>
-<div id="cart">Корзина пуста</div>
+      const data = {
+        fields: {
+          Name: "Проверка из сайта",
+          Phone: "87001234567",
+          Address: "ул. Примерная, 1",
+          Products: "Пример - 100 тг × 1",
+          Total: 100,
+          Status: "Новый"
+        }
+      };
 
-<h3>📦 Отправка заказа</h3>
-<div id="order-form">
-  <input type="text" id="name" placeholder="Введите ваше имя" required>
-  <input type="text" id="phone" placeholder="Введите номер телефона (формат: 87001234567)" required>
-  <input type="text" id="address" placeholder="Введите ваш адрес" required>
-  <button id="send-order" onclick="sendOrder()">Отправить заказ</button>
-</div>
+      const response = await fetch(`https://api.airtable.com/v0/${airtableBaseId}/${encodeURIComponent(airtableTableName)}`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${airtableApiKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+      });
 
-<script>
-const API_TOKEN = 'patH3Tqs7sTMEpo1G.f8d89a927a5f6e352cbe307be7a67e0e297ff32aaabf35e8115af646233845db'; // Вставьте свой API токен
-const BASE_ID = 'appLj0ax0IDVaRTd4'; // Вставьте свой Base ID
-const PRODUCTS_TABLE = 'Товары';
-const ORDERS_TABLE = 'Заказы'; // Имя таблицы для заказов
-const API_URL = `https://api.airtable.com/v0/${BASE_ID}/${PRODUCTS_TABLE}`;
-const ORDERS_URL = `https://api.airtable.com/v0/${BASE_ID}/${ORDERS_TABLE}`;
-const HEADERS = { Authorization: `Bearer ${API_TOKEN}` };
-const cart = [];
-
-function renderCart() {
-  const c = document.getElementById('cart');
-  if (!cart.length) return c.innerHTML = 'Корзина пуста';
-  let total = 0;
-  c.innerHTML = '<ul>' + cart.map((item, index) => {
-    total += item.price * item.quantity;
-    return `<li>${index + 1}. ${item.name} – ${item.price} тг × ${item.quantity}</li>`;
-  }).join('') + `</ul><b>Итого: ${total} тг</b>`;
-}
-
-function addToCart(name, price) {
-  const existingItem = cart.find(item => item.name === name);
-  if (existingItem) {
-    existingItem.quantity += 1;
-  } else {
-    cart.push({ name, price, quantity: 1 });
-  }
-  renderCart();
-}
-
-function removeFromCart(name) {
-  const index = cart.findIndex(item => item.name === name);
-  if (index > -1) {
-    cart.splice(index, 1);
-  }
-  renderCart();
-}
-
-function sendOrder() {
-  const name = document.getElementById('name').value;
-  const phone = document.getElementById('phone').value;
-  const address = document.getElementById('address').value;
-
-  // Проверка на правильность ввода данных
-  if (!name || !phone || !address) {
-    alert("Пожалуйста, заполните все поля.");
-    return;
-  }
-
-  // Простой регекс для проверки телефона
-  const phonePattern = /^[8]7[0-9]{9}$/;
-  if (!phonePattern.test(phone)) {
-    alert("Неверный формат телефона.");
-    return;
-  }
-
-  const orderData = {
-    fields: {
-      Name: name,
-      Phone: phone,
-      Address: address,
-      Products: cart.map(item => `${item.name} – ${item.price} тг × ${item.quantity}`).join('\n'),
-      Total: cart.reduce((total, item) => total + (item.price * item.quantity), 0),
-     
+      const result = await response.json();
+      console.log(result);
+      alert("Результат: " + JSON.stringify(result, null, 2));
     }
-  };
-
-  fetch(ORDERS_URL, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${API_TOKEN}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(orderData)
-  })
-  .then(response => response.json())
-  .then(data => {
-    alert("Заказ отправлен!");
-    // Очистить корзину и форму
-    cart.length = 0;
-    renderCart();
-    document.getElementById('name').value = '';
-    document.getElementById('phone').value = '';
-    document.getElementById('address').value = '';
-  })
-  .catch(error => {
-    console.error("Ошибка отправки заказа:", error);
-    alert("Произошла ошибка при отправке заказа. Попробуйте снова.");
-  });
-}
-
-fetch(API_URL, { headers: HEADERS })
-  .then(r => r.json())
-  .then(data => {
-    const p = document.getElementById('products');
-    p.innerHTML = '';
-    data.records.forEach(r => {
-      const f = r.fields;
-      const div = document.createElement('div');
-      div.className = 'product';
-     
-      div.innerHTML = `
-  <img src="${f['Image']?.[0]?.url || ''}" alt="">
-  <div><b>${f['Name']}</b></div>
-  <div>${f['Price']} тг</div>
-  <button onclick="addToCart('${f['Name']}', ${f['Price']})">Добавить</button>
-`;
-    p.appendChild(div);
-    });
-  })
-  .catch(() => document.getElementById('products').innerText = 'Ошибка загрузки');
-</script>
-
+  </script>
 </body>
 </html>
