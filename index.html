@@ -95,8 +95,16 @@ function sendOrder() {
   const phone = document.getElementById('phone').value;
   const address = document.getElementById('address').value;
 
+  // Проверка на правильность ввода данных
   if (!name || !phone || !address) {
     alert("Пожалуйста, заполните все поля.");
+    return;
+  }
+
+  // Простой регекс для проверки телефона
+  const phonePattern = /^[8]7[0-9]{9}$/;
+  if (!phonePattern.test(phone)) {
+    alert("Неверный формат телефона.");
     return;
   }
 
