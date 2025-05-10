@@ -182,10 +182,19 @@
         <p>${p.price}</p>
         <button class="add-btn">Добавить</button>
       `;
-      el.querySelector(".add-btn").addEventListener("click", () => {
+      
+      const addButton = el.querySelector(".add-btn");
+
+      // Проверка, добавлен ли товар в корзину
+      const existing = cart.find(item => item.name === p.name);
+      if (existing) {
+        addButton.disabled = true; // Делаем кнопку неактивной
+        addButton.textContent = "В корзине"; // Меняем текст кнопки
+      }
+
+      addButton.addEventListener("click", () => {
         document.getElementById("click-sound").play(); // звук
 
-        const existing = cart.find(item => item.name === p.name);
         if (existing) {
           existing.count += 1;
         } else {
@@ -193,6 +202,10 @@
         }
         saveCart();
         updateCartButton();
+
+        // Делаем кнопку неактивной, если товар уже в корзине
+        addButton.disabled = true;
+        addButton.textContent = "В корзине";
 
         // Анимация
         const img = el.querySelector("img");
@@ -220,6 +233,7 @@
 
         setTimeout(() => flyingImg.remove(), 900);
       });
+
       list.appendChild(el);
     });
   }
