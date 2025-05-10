@@ -1,14 +1,11 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
   <meta charset="UTF-8">
   <title>Мини-магазин</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body { font-family: sans-serif; margin: 20px; }
-    <button onclick="downloadPDF()">📄 Скачать заказ (PDF)</button>
-
     .grid { display: flex; flex-wrap: wrap; gap: 10px; }
     .product {
       border: 1px solid #ccc;
@@ -39,11 +36,12 @@
 <div class="grid" id="products">Загрузка...</div>
 
 <h3>🧺 Корзина</h3>
+<button onclick="downloadPDF()">📄 Скачать заказ (PDF)</button>
 <div id="cart">Корзина пуста</div>
 
 <script>
-const API_TOKEN = 'patH3Tqs7sTMEpo1G.f8d89a927a5f6e352cbe307be7a67e0e297ff32aaabf35e8115af646233845db';       // ← ВСТАВЬТЕ СВОЙ PAT
-const BASE_ID = 'appLj0ax0IDVaRTd4';     // ← ВСТАВЬТЕ Base ID
+const API_TOKEN = 'patH3Tqs7sTMEpo1G.f8d89a927a5f6e352cbe307be7a67e0e297ff32aaabf35e8115af646233845db'; // ← Твой PAT
+const BASE_ID = 'appLj0ax0IDVaRTd4'; // ← Твой Base ID
 const TABLE_NAME = 'Товары';
 const API_URL = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}`;
 const HEADERS = { Authorization: `Bearer ${API_TOKEN}` };
@@ -83,7 +81,8 @@ fetch(API_URL, { headers: HEADERS })
     });
   })
   .catch(() => document.getElementById('products').innerText = 'Ошибка загрузки');
-  async function downloadPDF() {
+
+function downloadPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   let y = 10;
@@ -104,7 +103,6 @@ fetch(API_URL, { headers: HEADERS })
 
   doc.save("zakaz.pdf");
 }
-
 </script>
 
 </body>
