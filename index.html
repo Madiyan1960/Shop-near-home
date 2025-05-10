@@ -126,6 +126,8 @@
       <strong>Итого: ${total} ₸</strong><br><br>
       <button onclick="clearCart()">🧹 Очистить корзину</button>
     `;
+    
+    
     container.appendChild(totalDiv);
   }
 
@@ -158,12 +160,6 @@
     saveCart();
     updateCartButton();
     showCart();
-
-    // Повторная активация кнопок "Добавить"
-    const buttons = document.querySelectorAll('.add-btn');
-    buttons.forEach(button => {
-        button.disabled = false; // активация кнопки
-    });
   }
 
   async function loadProductsFromCSV() {
@@ -319,6 +315,5 @@
       .then(() => console.log("Service Worker зарегистрирован"));
   }
 </script>
-
 </body>
 </html>
