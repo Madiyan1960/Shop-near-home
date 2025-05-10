@@ -115,8 +115,7 @@ function sendOrder() {
       Address: address,
       Products: cart.map(item => `${item.name} – ${item.price} тг × ${item.quantity}`).join('\n'),
       Total: cart.reduce((total, item) => total + (item.price * item.quantity), 0),
-      Status: 'Новый', // Статус нового заказа
-      Time: new Date().toLocaleString()
+     
     }
   };
 
