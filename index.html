@@ -28,11 +28,12 @@
     .product button:hover { background: #1b5e20; }
     #cart { margin-top: 20px; border-top: 1px dashed #999; padding-top: 10px; }
     #order-form { margin-top: 20px; }
-    input, button { padding: 5px; margin: 5px 0; width: 100%; }
+    input, button { padding: 5px; margin: 5px 0; width: 300px; }
     button:disabled {
       background-color: gray;
       cursor: not-allowed;
     }
+    h3, h2 { margin-bottom: 10px; }
   </style>
 </head>
 <body>
@@ -52,11 +53,12 @@
 </div>
 
 <script>
-const API_TOKEN = 'patH3Tqs7sTMEpo1G.f8d89a927a5f6e352cbe307be7a67e0e297ff32aaabf35e8115af646233845db'; // Вставьте свой API токен
+const API_TOKEN = 'your_airtable_token'; // Вставьте свой API токен
 const BASE_ID = 'appLj0ax0IDVaRTd4'; // Вставьте свой Base ID
 const PRODUCTS_TABLE = 'Товары';
 const ORDERS_TABLE = 'Заказы'; // Имя таблицы для заказов
 const API_URL = `https://api.airtable.com/v0/${BASE_ID}/${PRODUCTS_TABLE}`;
+const ORDERS_URL = `https://api.airtable.com/v0/${BASE_ID}/${ORDERS_TABLE}`;
 const HEADERS = { Authorization: `Bearer ${API_TOKEN}` };
 const cart = [];
 
@@ -110,7 +112,7 @@ function sendOrder() {
     }
   };
 
-  fetch(`https://api.airtable.com/v0/${BASE_ID}/${ORDERS_TABLE}`, {
+  fetch(ORDERS_URL, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${API_TOKEN}`,
