@@ -150,8 +150,8 @@ function downloadText() {
   let text = "Здравствуйте, Мадьян!\n\nВаш заказ:\n";
 
   let total = 0;
-  cart.forEach(item => {
-    text += `${item.name} (${item.price} ₸) × ${item.quantity}\n`;
+  cart.forEach((item, index) => {
+    text += `${index + 1}. ${item.name} (${item.price} ₸) × ${item.quantity}\n`;
     total += item.price * item.quantity;
   });
 
