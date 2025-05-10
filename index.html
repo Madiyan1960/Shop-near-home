@@ -107,6 +107,11 @@
     });
   }
 
+  // Обработчик для открытия корзины
+  document.getElementById("cart-button").addEventListener("click", function() {
+    alert("Корзина:\n" + cart.map(item => `${item.name} x${item.count}`).join("\n"));
+  });
+
   loadCart();
   loadProductsFromCSV();
   updateCartButton();
