@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Мини-магазин</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body { font-family: sans-serif; margin: 20px; }
     .grid { display: flex; flex-wrap: wrap; gap: 10px; }
@@ -83,15 +82,16 @@ fetch(API_URL, { headers: HEADERS })
   .catch(() => document.getElementById('products').innerText = 'Ошибка загрузки');
 
 function downloadText() {
-  let text = "🧾 Заказ из магазина\n\n";
+  let text = "Здравствуйте, Мадьян!\n\nВаш заказ:\n";
 
   let total = 0;
   cart.forEach(item => {
-    text += `${item.name} – ${item.price} тг\n`;
+    text += `${item.name} (${item.price} ₸) × 1\n`; // В примере указано "× 1", но можно изменить это на нужное количество
     total += item.price;
   });
 
-  text += `\nИтого: ${total} тг`;
+  text += `\nСумма: ${total} ₸\n`;
+  text += "Адрес: Астана ул. Кабанбай батыра 10\n";
 
   const blob = new Blob([text], { type: 'text/plain' });
   const link = document.createElement('a');
