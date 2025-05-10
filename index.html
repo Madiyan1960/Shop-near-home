@@ -26,7 +26,18 @@
       cursor: pointer;
     }
     .product button:hover { background: #1b5e20; }
+    .product button.disabled { background: #ccc; cursor: not-allowed; }
     #cart { margin-top: 20px; border-top: 1px dashed #999; padding-top: 10px; }
+    #cart ul { list-style: none; padding: 0; }
+    #cart li { margin-bottom: 10px; }
+    #cart button {
+      background: #ff5722;
+      color: white;
+      padding: 5px 10px;
+      border: none;
+      cursor: pointer;
+    }
+    #cart button:hover { background: #e64a19; }
   </style>
 </head>
 <body>
@@ -36,6 +47,7 @@
 
 <h3>🧺 Корзина</h3>
 <button onclick="downloadText()">📄 Скачать заказ (TXT)</button>
+<button onclick="clearCart()">🗑️ Очистить корзину</button>
 <div id="cart">Корзина пуста</div>
 
 <script>
@@ -49,16 +61,69 @@ const cart = [];
 function renderCart() {
   const c = document.getElementById('cart');
   if (!cart.length) return c.innerHTML = 'Корзина пуста';
+
   let total = 0;
-  c.innerHTML = '<ul>' + cart.map(i => {
-    total += i.price;
-    return `<li>${i.name} – ${i.price} тг</li>`;
-  }).join('') + `</ul><b>Итого: ${total} тг</b>`;
+  c.innerHTML = '<ul>' + cart.map((item, index) => {
+    total += item.price * item.quantity;
+    return `
+      <li>
+        ${index + 1}. ${item.name} (${item.price} ₸) × ${item.quantity}
+        <button onclick="removeFromCart(${index})">❌ Удалить</button>
+        <button onclick="increaseQuantity(${index})">➕ Увеличить</button>
+        <button onclick="decreaseQuantity(${index})">➖ Уменьшить</button>
+      </li>
+    `;
+  }).join('') + `</ul><b>Итого: ${total} ₸</b>`;
 }
 
 function addToCart(name, price) {
-  cart.push({ name, price });
+  const existingItem = cart.find(item => item.name === name);
+  if (existingItem) {
+    existingItem.quantity += 1;
+  } else {
+    cart.push({ name, price, quantity: 1 });
+  }
   renderCart();
+  disableButton(name);
+}
+
+function removeFromCart(index) {
+  cart.splice(index, 1);
+  renderCart();
+  enableAllButtons();
+}
+
+function increaseQuantity(index) {
+  cart[index].quantity += 1;
+  renderCart();
+}
+
+function decreaseQuantity(index) {
+  if (cart[index].quantity > 1) {
+    cart[index].quantity -= 1;
+    renderCart();
+  }
+}
+
+function clearCart() {
+  cart.length = 0;
+  renderCart();
+  enableAllButtons();
+}
+
+function disableButton(name) {
+  const buttons = document.querySelectorAll(`button[data-name="${name}"]`);
+  buttons.forEach(button => {
+    button.classList.add('disabled');
+    button.disabled = true;
+  });
+}
+
+function enableAllButtons() {
+  document.querySelectorAll('button').forEach(button => {
+    button.classList.remove('disabled');
+    button.disabled = false;
+  });
 }
 
 fetch(API_URL, { headers: HEADERS })
@@ -74,7 +139,7 @@ fetch(API_URL, { headers: HEADERS })
         <img src="${f['Фото']?.[0]?.url || ''}" alt="">
         <div><b>${f['Название']}</b></div>
         <div>${f['Цена']} тг</div>
-        <button onclick="addToCart('${f['Название']}', ${f['Цена']})">Добавить</button>
+        <button data-name="${f['Название']}" onclick="addToCart('${f['Название']}', ${f['Цена']})">Добавить</button>
       `;
       p.appendChild(div);
     });
@@ -86,8 +151,8 @@ function downloadText() {
 
   let total = 0;
   cart.forEach(item => {
-    text += `${item.name} (${item.price} ₸) × 1\n`; // В примере указано "× 1", но можно изменить это на нужное количество
-    total += item.price;
+    text += `${item.name} (${item.price} ₸) × ${item.quantity}\n`;
+    total += item.price * item.quantity;
   });
 
   text += `\nСумма: ${total} ₸\n`;
