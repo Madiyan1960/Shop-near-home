@@ -153,13 +153,14 @@ fetch(API_URL, { headers: HEADERS })
       const f = r.fields;
       const div = document.createElement('div');
       div.className = 'product';
+     
       div.innerHTML = `
-        <img src="${f['Фото']?.[0]?.url || ''}" alt="">
-        <div><b>${f['Products']}</b></div>
-        <div>${f['Total']} тг</div>
-        <button onclick="addToCart('${f['Products']}', ${f['Total']})">Добавить</button>
-      `;
-      p.appendChild(div);
+  <img src="${f['Image']?.[0]?.url || ''}" alt="">
+  <div><b>${f['Name']}</b></div>
+  <div>${f['Price']} тг</div>
+  <button onclick="addToCart('${f['Name']}', ${f['Price']})">Добавить</button>
+`;
+    p.appendChild(div);
     });
   })
   .catch(() => document.getElementById('products').innerText = 'Ошибка загрузки');
