@@ -72,7 +72,7 @@
 
 <script>
   const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQoChjmnMdjDn-siHAEHrBpDaz-3tkFx68Peo1LXU_Nc8R5XTm5Gee2pi-O9jz1XyYhhCGCDnTKa0cR/pub?gid=0&single=true&output=csv";
-  let cart = [];
+  let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
   // Функция обновления текста на кнопке корзины
   function updateCartButton() {
