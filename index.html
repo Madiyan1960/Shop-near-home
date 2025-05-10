@@ -49,6 +49,8 @@
     }
 
     #cart-items p { margin: 0.5rem 0; }
+    #saved-users-list div { margin: 0.3rem 0; }
+    #saved-users-list button { margin-top: 0.2rem; }
   </style>
 </head>
 <body>
@@ -94,12 +96,7 @@
   }
 
   function updateCartButton() {
-    const cartButton = document.getElementById("cart-button");
-    if (getTotalCount() > 0) {
-      cartButton.textContent = `В корзине (${getTotalCount()})`;
-    } else {
-      cartButton.textContent = "Корзина (0)";
-    }
+    document.getElementById("cart-button").textContent = `Корзина (${getTotalCount()})`;
   }
 
   function showCart() {
@@ -129,6 +126,8 @@
       <strong>Итого: ${total} ₸</strong><br><br>
       <button onclick="clearCart()">🧹 Очистить корзину</button>
     `;
+    
+    
     container.appendChild(totalDiv);
   }
 
@@ -183,8 +182,9 @@
         <p>${p.price}</p>
         <button class="add-btn">Добавить</button>
       `;
-      const addButton = el.querySelector(".add-btn");
-      addButton.addEventListener("click", () => {
+      el.querySelector(".add-btn").addEventListener("click", () => {
+        document.getElementById("click-sound").play(); // звук
+
         const existing = cart.find(item => item.name === p.name);
         if (existing) {
           existing.count += 1;
@@ -193,21 +193,127 @@
         }
         saveCart();
         updateCartButton();
-        addButton.textContent = "В корзине";
-        setTimeout(() => {
-          addButton.textContent = "Добавить";
-        }, 2000); // кнопка возвращается к "Добавить" через 2 секунды
+
+        // Анимация
+        const img = el.querySelector("img");
+        const imgRect = img.getBoundingClientRect();
+        const cartBtn = document.getElementById("cart-button");
+        const cartRect = cartBtn.getBoundingClientRect();
+
+        const flyingImg = img.cloneNode(true);
+        flyingImg.style.position = "fixed";
+        flyingImg.style.zIndex = "1000";
+        flyingImg.style.left = imgRect.left + "px";
+        flyingImg.style.top = imgRect.top + "px";
+        flyingImg.style.width = imgRect.width + "px";
+        flyingImg.style.height = imgRect.height + "px";
+        flyingImg.style.transition = "all 0.8s ease-in-out";
+        document.body.appendChild(flyingImg);
+
+        requestAnimationFrame(() => {
+          flyingImg.style.left = cartRect.left + "px";
+          flyingImg.style.top = cartRect.top + "px";
+          flyingImg.style.width = "30px";
+          flyingImg.style.height = "30px";
+          flyingImg.style.opacity = "0.5";
+        });
+
+        setTimeout(() => flyingImg.remove(), 900);
       });
       list.appendChild(el);
     });
   }
 
+  function loadUserData() {
+    const savedData = JSON.parse(localStorage.getItem("userData")) || [];
+    const list = document.getElementById("saved-users-list");
+    list.innerHTML = "<strong>Сохранённые пользователи:</strong><br>";
+
+    savedData.forEach((user, index) => {
+      const div = document.createElement("div");
+      div.innerHTML = `
+        <button onclick="selectUser(${index})">${user.name} - ${user.phone} - ${user.address}</button>
+        <button onclick="deleteUser(${index})" style="margin-left: 0.5rem;">🗑</button>
+      `;
+      list.appendChild(div);
+    });
+  }
+
+  function selectUser(index) {
+    const savedData = JSON.parse(localStorage.getItem("userData")) || [];
+    const user = savedData[index];
+    if (user) {
+      document.getElementById("name").value = user.name;
+      document.getElementById("phone").value = user.phone;
+      document.getElementById("address").value = user.address;
+    }
+  }
+
+  function deleteUser(index) {
+    let savedData = JSON.parse(localStorage.getItem("userData")) || [];
+    if (confirm(`Удалить пользователя ${savedData[index].name}?`)) {
+      savedData.splice(index, 1);
+      localStorage.setItem("userData", JSON.stringify(savedData));
+      loadUserData();
+    }
+  }
+
+  function openPreFilledForm() {
+    let name = document.getElementById("name").value.trim();
+    let rawPhone = document.getElementById("phone").value.trim();
+    let address = document.getElementById("address").value.trim();
+
+    if (!name || !rawPhone || !address) {
+      alert("Заполните имя, телефон и адрес.");
+      return;
+    }
+
+    if (!/^8\d{10}$/.test(rawPhone)) {
+      alert("Телефон должен быть в формате 8XXXXXXXXXX (11 цифр).");
+      return;
+    }
+
+    const phone = rawPhone;
+    name = name.replace(/,/g, " ");
+    address = address.replace(/,/g, " ");
+
+    const order = cart.map(p => `${p.name.replace(/,/g, " ")} (${p.price.replace(/,/g, " ")}) × ${p.count}`).join("<br> ");
+    const total = getTotalPrice();
+    const status = "Оформлен";
+
+    let savedData = JSON.parse(localStorage.getItem("userData")) || [];
+    const existing = savedData.find(u => u.phone === phone);
+    if (!existing) {
+      savedData.push({ name, phone, address });
+      localStorage.setItem("userData", JSON.stringify(savedData));
+      loadUserData();
+    }
+
+    const base = "https://docs.google.com/forms/d/e/1FAIpQLSegQ5wqbLaMU094d5y1EqfGDYedlBa362BoqFeBfA-RXiAQqg/viewform";
+    const params = new URLSearchParams({
+      "entry.1735845883": name,
+      "entry.422081956": phone,
+      "entry.1694441696": address,
+      "entry.1899533559": order,
+      "entry.315266378": total,
+      "entry.1207854373": status
+    });
+
+    window.open(`${base}?${params.toString()}`, "_blank");
+  }
+
   loadCart();
   updateCartButton();
   loadProductsFromCSV();
-
+  loadUserData();
   document.getElementById("cart-button").addEventListener("click", showCart);
 </script>
 
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js')
+      .then(() => console.log("Service Worker зарегистрирован"));
+  }
+</script>
 </body>
 </html>
