@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <meta charset="UTF-8">
   <title>Мини-магазин</title>
   <style>
@@ -28,6 +27,8 @@
     }
     .product button:hover { background: #1b5e20; }
     #cart { margin-top: 20px; border-top: 1px dashed #999; padding-top: 10px; }
+    #order-form { margin-top: 20px; }
+    input, button { padding: 5px; margin: 5px 0; width: 100%; }
   </style>
 </head>
 <body>
@@ -38,139 +39,116 @@
 <h3>🧺 Корзина</h3>
 <div id="cart">Корзина пуста</div>
 
-<h3>📦 Данные для отправки заказа</h3>
-<form id="orderForm">
-  <label for="name">Имя:</label>
-  <input type="text" id="name" name="name" required><br><br>
-
-  <label for="phone">Телефон:</label>
-  <input type="tel" id="phone" name="phone" pattern="^\+?\d{1,15}$" required><br><br>
-  <small>Телефон в формате: +77770000000</small><br><br>
-
-  <label for="address">Адрес:</label>
-  <textarea id="address" name="address" required></textarea><br><br>
-
-  <button type="button" onclick="submitOrder()">Отправить заказ</button>
-</form>
+<h3>📦 Отправка заказа</h3>
+<div id="order-form">
+  <input type="text" id="name" placeholder="Введите ваше имя" required>
+  <input type="text" id="phone" placeholder="Введите номер телефона (формат: 87001234567)" required>
+  <input type="text" id="address" placeholder="Введите ваш адрес" required>
+  <button id="send-order" onclick="sendOrder()">Отправить заказ</button>
+</div>
 
 <script>
-  const API_TOKEN = 'patH3Tqs7sTMEpo1G.f8d89a927a5f6e352cbe307be7a67e0e297ff32aaabf35e8115af646233845db';  // Замените на свой PAT
-  const BASE_ID = 'appLj0ax0IDVaRTd4';           // Замените на свой Base ID
-  const TABLE_NAME = 'заказы';              // Название вашей таблицы заказов
+const API_TOKEN = 'your_airtable_token'; // Вставьте свой API токен
+const BASE_ID = 'appLj0ax0IDVaRTd4'; // Вставьте свой Base ID
+const PRODUCTS_TABLE = 'Товары';
+const ORDERS_TABLE = 'Заказы'; // Имя таблицы для заказов
+const API_URL = `https://api.airtable.com/v0/${BASE_ID}/${PRODUCTS_TABLE}`;
+const HEADERS = { Authorization: `Bearer ${API_TOKEN}` };
+const cart = [];
 
-  const API_URL = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}`;
-  const HEADERS = { Authorization: `Bearer ${API_TOKEN}`, 'Content-Type': 'application/json' };
+function renderCart() {
+  const c = document.getElementById('cart');
+  if (!cart.length) return c.innerHTML = 'Корзина пуста';
+  let total = 0;
+  c.innerHTML = '<ul>' + cart.map((item, index) => {
+    total += item.price * item.quantity;
+    return `<li>${index + 1}. ${item.name} – ${item.price} тг × ${item.quantity}</li>`;
+  }).join('') + `</ul><b>Итого: ${total} тг</b>`;
+}
 
-  const cart = [];
-
-  function renderCart() {
-    const c = document.getElementById('cart');
-    if (!cart.length) return c.innerHTML = 'Корзина пуста';
-    let total = 0;
-    c.innerHTML = '<ul>' + cart.map((i, index) => {
-      total += i.price * i.quantity;
-      return `
-        <li>
-          ${index + 1}. ${i.name} – ${i.price} ₸ × ${i.quantity}
-          <button onclick="removeFromCart(${index})">Удалить</button>
-          <button onclick="updateQuantity(${index}, -1)">-</button>
-          <button onclick="updateQuantity(${index}, 1)">+</button>
-        </li>
-      `;
-    }).join('') + `</ul><b>Итого: ${total} тг</b>`;
+function addToCart(name, price) {
+  const existingItem = cart.find(item => item.name === name);
+  if (existingItem) {
+    existingItem.quantity += 1;
+  } else {
+    cart.push({ name, price, quantity: 1 });
   }
+  renderCart();
+}
 
-  function addToCart(name, price) {
-    const existingProduct = cart.find(item => item.name === name);
-    if (existingProduct) {
-      existingProduct.quantity += 1;
-    } else {
-      cart.push({ name, price, quantity: 1 });
-    }
-    renderCart();
-  }
-
-  function removeFromCart(index) {
+function removeFromCart(name) {
+  const index = cart.findIndex(item => item.name === name);
+  if (index > -1) {
     cart.splice(index, 1);
+  }
+  renderCart();
+}
+
+function sendOrder() {
+  const name = document.getElementById('name').value;
+  const phone = document.getElementById('phone').value;
+  const address = document.getElementById('address').value;
+
+  if (!name || !phone || !address) {
+    alert("Пожалуйста, заполните все поля.");
+    return;
+  }
+
+  const orderData = {
+    fields: {
+      Name: name,
+      Phone: phone,
+      Address: address,
+      Products: cart.map(item => `${item.name} – ${item.price} тг × ${item.quantity}`).join('\n'),
+      Total: cart.reduce((total, item) => total + (item.price * item.quantity), 0),
+      Status: 'Новый', // Статус нового заказа
+      Time: new Date().toLocaleString()
+    }
+  };
+
+  fetch(`https://api.airtable.com/v0/${BASE_ID}/${ORDERS_TABLE}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${API_TOKEN}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(orderData)
+  })
+  .then(response => response.json())
+  .then(data => {
+    alert("Заказ отправлен!");
+    // Очистить корзину и форму
+    cart.length = 0;
     renderCart();
-  }
+    document.getElementById('name').value = '';
+    document.getElementById('phone').value = '';
+    document.getElementById('address').value = '';
+  })
+  .catch(error => {
+    console.error("Ошибка отправки заказа:", error);
+    alert("Произошла ошибка при отправке заказа. Попробуйте снова.");
+  });
+}
 
-  function updateQuantity(index, delta) {
-    if (cart[index].quantity + delta > 0) {
-      cart[index].quantity += delta;
-      renderCart();
-    }
-  }
-
-  function submitOrder() {
-    const name = document.getElementById('name').value;
-    const phone = document.getElementById('phone').value;
-    const address = document.getElementById('address').value;
-
-    if (!name || !phone || !address || !cart.length) {
-      alert("Пожалуйста, заполните все поля и добавьте товар в корзину.");
-      return;
-    }
-
-    const orderDetails = cart.map((item, index) => {
-      return `${index + 1}. ${item.name} (${item.price} ₸) × ${item.quantity}`;
-    }).join('\n');
-
-    const totalAmount = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-    const order = {
-      fields: {
-        'Time': new Date().toLocaleString(),
-        'Name': name,
-        'Phone': phone,
-        'Address': address,
-        'Items': orderDetails,
-        'Total': totalAmount,
-        'Status': 'Новый'
-      }
-    };
-
-    sendOrderToDatabase(order);
-  }
-
-  function sendOrderToDatabase(order) {
-    fetch(API_URL, {
-      method: 'POST',
-      headers: HEADERS,
-      body: JSON.stringify(order)
-    })
-    .then(response => response.json())
-    .then(() => {
-      alert('Ваш заказ отправлен!');
-      cart.length = 0;
-      renderCart();
-      document.getElementById('orderForm').reset();
-    })
-    .catch(error => {
-      alert('Произошла ошибка при отправке заказа. Попробуйте снова.');
-      console.error(error);
+fetch(API_URL, { headers: HEADERS })
+  .then(r => r.json())
+  .then(data => {
+    const p = document.getElementById('products');
+    p.innerHTML = '';
+    data.records.forEach(r => {
+      const f = r.fields;
+      const div = document.createElement('div');
+      div.className = 'product';
+      div.innerHTML = `
+        <img src="${f['Фото']?.[0]?.url || ''}" alt="">
+        <div><b>${f['Название']}</b></div>
+        <div>${f['Цена']} тг</div>
+        <button onclick="addToCart('${f['Название']}', ${f['Цена']})">Добавить</button>
+      `;
+      p.appendChild(div);
     });
-  }
-
-  fetch(`https://api.airtable.com/v0/${BASE_ID}/Товары`, { headers: HEADERS })
-    .then(r => r.json())
-    .then(data => {
-      const p = document.getElementById('products');
-      p.innerHTML = '';
-      data.records.forEach(r => {
-        const f = r.fields;
-        const div = document.createElement('div');
-        div.className = 'product';
-        div.innerHTML = `
-          <img src="${f['Фото']?.[0]?.url || ''}" alt="">
-          <div><b>${f['Название']}</b></div>
-          <div>${f['Цена']} тг</div>
-          <button onclick="addToCart('${f['Название']}', ${f['Цена']})">Добавить</button>
-        `;
-        p.appendChild(div);
-      });
-    })
-    .catch(() => document.getElementById('products').innerText = 'Ошибка загрузки');
+  })
+  .catch(() => document.getElementById('products').innerText = 'Ошибка загрузки');
 </script>
 
 </body>
