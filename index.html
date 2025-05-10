@@ -68,8 +68,6 @@
   <p><label for="address">Адрес:</label><br><input type="text" id="address" /></p>
   <div id="saved-users-list"></div>
   <button onclick="openPreFilledForm()">Отправить заказ</button>
-  <!-- Кнопка для сохранения товаров в файл -->
-  <button onclick="saveCartToFile()">Сохранить товары</button>
 </div>
 
 <div id="product-list" class="product-list"></div>
@@ -128,6 +126,8 @@
       <strong>Итого: ${total} ₸</strong><br><br>
       <button onclick="clearCart()">🧹 Очистить корзину</button>
     `;
+    
+    
     container.appendChild(totalDiv);
   }
 
@@ -224,28 +224,88 @@
     });
   }
 
-  function saveCartToFile() {
-    if (cart.length === 0) {
-      alert("Корзина пуста!");
+  function loadUserData() {
+    const savedData = JSON.parse(localStorage.getItem("userData")) || [];
+    const list = document.getElementById("saved-users-list");
+    list.innerHTML = "<strong>Сохранённые пользователи:</strong><br>";
+
+    savedData.forEach((user, index) => {
+      const div = document.createElement("div");
+      div.innerHTML = `
+        <button onclick="selectUser(${index})">${user.name} - ${user.phone} - ${user.address}</button>
+        <button onclick="deleteUser(${index})" style="margin-left: 0.5rem;">🗑</button>
+      `;
+      list.appendChild(div);
+    });
+  }
+
+  function selectUser(index) {
+    const savedData = JSON.parse(localStorage.getItem("userData")) || [];
+    const user = savedData[index];
+    if (user) {
+      document.getElementById("name").value = user.name;
+      document.getElementById("phone").value = user.phone;
+      document.getElementById("address").value = user.address;
+    }
+  }
+
+  function deleteUser(index) {
+    let savedData = JSON.parse(localStorage.getItem("userData")) || [];
+    if (confirm(`Удалить пользователя ${savedData[index].name}?`)) {
+      savedData.splice(index, 1);
+      localStorage.setItem("userData", JSON.stringify(savedData));
+      loadUserData();
+    }
+  }
+
+  function openPreFilledForm() {
+    let name = document.getElementById("name").value.trim();
+    let rawPhone = document.getElementById("phone").value.trim();
+    let address = document.getElementById("address").value.trim();
+
+    if (!name || !rawPhone || !address) {
+      alert("Заполните имя, телефон и адрес.");
       return;
     }
 
-    let cartContent = "Товары в корзине:\n\n";
-    cart.forEach(item => {
-      cartContent += `${item.name} – ${item.price} × ${item.count}\n`;
-    });
-    cartContent += `\nИтого: ${getTotalPrice()} ₸`;
+    if (!/^8\d{10}$/.test(rawPhone)) {
+      alert("Телефон должен быть в формате 8XXXXXXXXXX (11 цифр).");
+      return;
+    }
 
-    const blob = new Blob([cartContent], { type: 'text/plain' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'cart.txt';
-    link.click();
+    const phone = rawPhone;
+    name = name.replace(/,/g, " ");
+    address = address.replace(/,/g, " ");
+
+    const order = cart.map(p => `${p.name.replace(/,/g, " ")} (${p.price.replace(/,/g, " ")}) × ${p.count}`).join("<br> ");
+    const total = getTotalPrice();
+    const status = "Оформлен";
+
+    let savedData = JSON.parse(localStorage.getItem("userData")) || [];
+    const existing = savedData.find(u => u.phone === phone);
+    if (!existing) {
+      savedData.push({ name, phone, address });
+      localStorage.setItem("userData", JSON.stringify(savedData));
+      loadUserData();
+    }
+
+    const base = "https://docs.google.com/forms/d/e/1FAIpQLSegQ5wqbLaMU094d5y1EqfGDYedlBa362BoqFeBfA-RXiAQqg/viewform";
+    const params = new URLSearchParams({
+      "entry.1735845883": name,
+      "entry.422081956": phone,
+      "entry.1694441696": address,
+      "entry.1899533559": order,
+      "entry.315266378": total,
+      "entry.1207854373": status
+    });
+
+    window.open(`${base}?${params.toString()}`, "_blank");
   }
 
   loadCart();
   updateCartButton();
   loadProductsFromCSV();
+  loadUserData();
   document.getElementById("cart-button").addEventListener("click", showCart);
 </script>
 
