@@ -18,18 +18,41 @@
     @media (max-width: 600px) {
       .product-list { grid-template-columns: repeat(2, 1fr); }
     }
+
+    #cart-button {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      background: #388e3c;
+      color: white;
+      border: none;
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      z-index: 100;
+    }
   </style>
 </head>
 <body>
 
 <h3>Магазин у дома</h3>
 
+<!-- Кнопка корзины -->
+<button id="cart-button">Корзина (0)</button>
+
+<!-- Список товаров -->
 <div id="product-list" class="product-list"></div>
 
 <script>
   const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQoChjmnMdjDn-siHAEHrBpDaz-3tkFx68Peo1LXU_Nc8R5XTm5Gee2pi-O9jz1XyYhhCGCDnTKa0cR/pub?gid=0&single=true&output=csv";
   let cart = [];
 
+  // Функция обновления текста на кнопке корзины
+  function updateCartButton() {
+    document.getElementById("cart-button").textContent = `Корзина (${cart.length})`;
+  }
+
+  // Загрузка товаров из CSV
   async function loadProductsFromCSV() {
     const res = await fetch(CSV_URL);
     const text = await res.text();
@@ -68,6 +91,9 @@
           cart.push({ ...p, count: 1 });
         }
 
+        // Обновляем корзину и кнопку
+        updateCartButton();
+
         // Обновляем текст кнопки и делаем её неактивной
         button.textContent = "В корзине";
         button.disabled = true;
@@ -77,6 +103,7 @@
     });
   }
 
+  // Загружаем товары
   loadProductsFromCSV();
 </script>
 
