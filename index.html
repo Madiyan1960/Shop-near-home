@@ -40,8 +40,8 @@
 <div id="cart">Корзина пуста</div>
 
 <script>
-const API_TOKEN = 'patH3Tqs7sTMEpo1G.f8d89a927a5f6e352cbe307be7a67e0e297ff32aaabf35e8115af646233845db'; // ← Твой PAT
-const BASE_ID = 'appLj0ax0IDVaRTd4'; // ← Твой Base ID
+const API_TOKEN = 'patH3Tqs7sTMEpo1G.f8d89a927a5f6e352cbe307be7a67e0e297ff32aaabf35e8115af646233845db'; // ← ВАШ PAT
+const BASE_ID = 'appLj0ax0IDVaRTd4'; // ← ВАШ Base ID
 const TABLE_NAME = 'Товары';
 const API_URL = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}`;
 const HEADERS = { Authorization: `Bearer ${API_TOKEN}` };
@@ -82,12 +82,23 @@ fetch(API_URL, { headers: HEADERS })
   })
   .catch(() => document.getElementById('products').innerText = 'Ошибка загрузки');
 
+// Подключаем встроенный шрифт DejaVuSans
+const dejavuFont = `AAEAAAASAQAABAAgR0RFRrRCsIIAAACcAAAAYGNtYXAAAwAAAAFcAAAACGdseWZ4HhF8AAABHAAAA...
+...`; // ← Здесь будет длинная строка base64 шрифта
+
+window.jspdf.jsPDF.API.events.push(['addFonts', function () {
+  this.addFileToVFS('DejaVuSans.ttf', dejavuFont);
+  this.addFont('DejaVuSans.ttf', 'DejaVuSans', 'normal');
+}]);
+
 function downloadPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
+
+  doc.setFont('DejaVuSans');
+  doc.setFontSize(14);
   let y = 10;
 
-  doc.setFontSize(14);
   doc.text("🧾 Заказ из магазина", 10, y);
   y += 10;
 
