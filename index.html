@@ -14,6 +14,7 @@
     .product h3 { margin: 0.4rem 0 0.2rem; font-size: 0.9rem; }
     .product p { margin: 0; font-size: 0.85rem; color: #555; }
     .add-btn { margin-top: 0.4rem; padding: 0.3rem 0.5rem; background: #2e7d32; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    .add-btn:disabled { background: #888; cursor: not-allowed; }
 
     @media (max-width: 600px) {
       .product-list { grid-template-columns: repeat(2, 1fr); }
@@ -44,10 +45,12 @@
   const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQoChjmnMdjDn-siHAEHrBpDaz-3tkFx68Peo1LXU_Nc8R5XTm5Gee2pi-O9jz1XyYhhCGCDnTKa0cR/pub?gid=0&single=true&output=csv";
   let cart = [];
 
+  // Сохраняем корзину в localStorage
   function saveCart() {
     localStorage.setItem("cart", JSON.stringify(cart));
   }
 
+  // Загружаем корзину из localStorage
   function loadCart() {
     const data = localStorage.getItem("cart");
     if (data) {
@@ -59,14 +62,17 @@
     }
   }
 
+  // Получаем общее количество товаров в корзине
   function getTotalCount() {
     return cart.reduce((sum, item) => sum + item.count, 0);
   }
 
+  // Обновляем текст на кнопке корзины
   function updateCartButton() {
     document.getElementById("cart-button").textContent = `Корзина (${getTotalCount()})`;
   }
 
+  // Загрузить товары из CSV
   async function loadProductsFromCSV() {
     const res = await fetch(CSV_URL);
     const text = await res.text();
@@ -87,14 +93,13 @@
         <img src="${p.image}" alt="${p.name}">
         <h3>${p.name}</h3>
         <p>${p.price}</p>
-        <button class="add-btn">${inCart ? "В корзине" : "Добавить"}</button>
+        <button class="add-btn" ${inCart ? 'disabled' : ''}>
+          ${inCart ? "В корзине" : "Добавить"}
+        </button>
       `;
       const btn = el.querySelector(".add-btn");
 
-      if (inCart) {
-        btn.disabled = true;
-        btn.style.background = "#888";
-      } else {
+      if (!inCart) {
         btn.addEventListener("click", () => {
           cart.push({ ...p, count: 1 });
           saveCart();
@@ -112,6 +117,7 @@
     alert("Корзина:\n" + cart.map(item => `${item.name} x${item.count}`).join("\n"));
   });
 
+  // Загрузка данных
   loadCart();
   loadProductsFromCSV();
   updateCartButton();
