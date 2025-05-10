@@ -11,14 +11,12 @@
     .product-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.7rem; }
     .product { background: white; padding: 0.6rem; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative; }
     .product img { width: 100%; height: 100px; object-fit: cover; border-radius: 6px; }
-    .product h3 { margin: 0.4rem 0 0.2rem;font-size: 0.9rem; }
-    .product p { margin: 0;font-size: 0.85rem; color: #555; }
+    .product h3 { margin: 0.4rem 0 0.2rem; font-size: 0.9rem; }
+    .product p { margin: 0; font-size: 0.85rem; color: #555; }
     .add-btn { margin-top: 0.4rem; padding: 0.3rem 0.5rem; background: #2e7d32; color: white; border: none; border-radius: 5px; cursor: pointer; }
 
     @media (max-width: 600px) {
-      .product-list {
-        grid-template-columns: repeat(2, 1fr);
-      }
+      .product-list { grid-template-columns: repeat(2, 1fr); }
     }
 
     #cart-button {
@@ -55,256 +53,265 @@
     #saved-users-list button { margin-top: 0.2rem; }
   </style>
 </head>
-
 <body>
-  <h1>Магазин у дома</h1>
-  <button id="cart-button">Корзина (0)</button>
 
-  <div id="cart-modal">
-    <h3>Корзина</h3>
-    <div id="cart-items"></div>
-    <p><label for="name">Имя:</label><br><input type="text" id="name" /></p>
-    <p><label for="phone">Телефон:</label><br><input type="text" id="phone" placeholder="8XXXXXXXXXX" /></p>
-    <p><label for="address">Адрес:</label><br><input type="text" id="address" /></p>
-    <div id="saved-users-list"></div>
-    <button onclick="openPreFilledForm()">Отправить заказ</button>
-  </div>
+<h1>Магазин у дома</h1>
+<button id="cart-button">Корзина (0)</button>
 
-  <div id="product-list" class="product-list"></div>
+<audio id="click-sound" src="https://www.soundjay.com/buttons/sounds/button-16.mp3" preload="auto"></audio>
 
-  <script>
-    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQoChjmnMdjDn-siHAEHrBpDaz-3tkFx68Peo1LXU_Nc8R5XTm5Gee2pi-O9jz1XyYhhCGCDnTKa0cR/pub?gid=0&single=true&output=csv";
-    let cart = [];
+<div id="cart-modal">
+  <h3>Корзина</h3>
+  <div id="cart-items"></div>
+  <p><label for="name">Имя:</label><br><input type="text" id="name" /></p>
+  <p><label for="phone">Телефон:</label><br><input type="text" id="phone" placeholder="8XXXXXXXXXX" /></p>
+  <p><label for="address">Адрес:</label><br><input type="text" id="address" /></p>
+  <div id="saved-users-list"></div>
+  <button onclick="openPreFilledForm()">Отправить заказ</button>
+</div>
 
-    function saveCart() {
-      localStorage.setItem("cart", JSON.stringify(cart));
-    }
+<div id="product-list" class="product-list"></div>
 
-    function loadCart() {
-      const data = localStorage.getItem("cart");
-      if (data) {
-        try {
-          cart = JSON.parse(data).map(item => ({ ...item, count: item.count ?? 1 }));
-        } catch (e) {
-          cart = [];
-        }
+<script>
+  const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQoChjmnMdjDn-siHAEHrBpDaz-3tkFx68Peo1LXU_Nc8R5XTm5Gee2pi-O9jz1XyYhhCGCDnTKa0cR/pub?gid=0&single=true&output=csv";
+  let cart = [];
+
+  function saveCart() {
+    localStorage.setItem("cart", JSON.stringify(cart));
+  }
+
+  function loadCart() {
+    const data = localStorage.getItem("cart");
+    if (data) {
+      try {
+        cart = JSON.parse(data).map(item => ({ ...item, count: item.count ?? 1 }));
+      } catch (e) {
+        cart = [];
       }
     }
+  }
 
-    function getTotalCount() {
-      return cart.reduce((sum, item) => sum + item.count, 0);
-    }
+  function getTotalCount() {
+    return cart.reduce((sum, item) => sum + item.count, 0);
+  }
 
-    function updateCartButton() {
-      document.getElementById("cart-button").textContent = `Корзина (${getTotalCount()})`;
-    }
+  function updateCartButton() {
+    document.getElementById("cart-button").textContent = `Корзина (${getTotalCount()})`;
+  }
 
-    function showCart() {
-      const modal = document.getElementById("cart-modal");
-      modal.style.display = modal.style.display === "block" ? "none" : "block";
-      const container = document.getElementById("cart-items");
-      container.innerHTML = "";
-      cart.forEach((p, index) => {
-        const item = document.createElement("div");
-        item.innerHTML = `
-          <p>
-            ${p.name} – ${p.price} × ${p.count}
-            <button onclick="changeCount(${index}, 1)">+</button>
-            <button onclick="changeCount(${index}, -1)">−</button>
-            <button onclick="removeItem(${index})">🗑</button>
-          </p>
-        `;
-        container.appendChild(item);
-      });
-      const total = getTotalPrice();
-      const totalDiv = document.createElement("div");
-      totalDiv.innerHTML = `
-        <hr>
-        <strong>Итого: ${total} ₸</strong><br><br>
-        <button onclick="clearCart()">🧹 Очистить корзину</button>
+  function showCart() {
+    const modal = document.getElementById("cart-modal");
+    modal.style.display = modal.style.display === "block" ? "none" : "block";
+
+    const container = document.getElementById("cart-items");
+    container.innerHTML = "";
+
+    cart.forEach((p, index) => {
+      const item = document.createElement("div");
+      item.innerHTML = `
+        <p>
+          ${p.name} – ${p.price} × ${p.count}
+          <button onclick="changeCount(${index}, 1)">+</button>
+          <button onclick="changeCount(${index}, -1)">−</button>
+          <button onclick="removeItem(${index})">🗑</button>
+        </p>
       `;
-      container.appendChild(totalDiv);
-    }
+      container.appendChild(item);
+    });
 
-    function changeCount(index, delta) {
-      cart[index].count += delta;
-      if (cart[index].count <= 0) {
-        cart.splice(index, 1);
-      }
-      saveCart();
-      updateCartButton();
-      showCart();
-    }
+    const total = getTotalPrice();
+    const totalDiv = document.createElement("div");
+    totalDiv.innerHTML = `
+      <hr>
+      <strong>Итого: ${total} ₸</strong><br><br>
+      <button onclick="clearCart()">🧹 Очистить корзину</button>
+    `;
+    container.appendChild(totalDiv);
+  }
 
-    function removeItem(index) {
+  function changeCount(index, delta) {
+    cart[index].count += delta;
+    if (cart[index].count <= 0) {
       cart.splice(index, 1);
-      saveCart();
-      updateCartButton();
-      showCart();
     }
+    saveCart();
+    updateCartButton();
+    showCart();
+  }
 
-    function getTotalPrice() {
-      return cart.reduce((sum, item) => {
-        const price = parseInt(item.price.replace(/\D/g, ""), 10);
-        return sum + price * item.count;
-      }, 0);
-    }
+  function removeItem(index) {
+    cart.splice(index, 1);
+    saveCart();
+    updateCartButton();
+    showCart();
+  }
 
-    function clearCart() {
-      cart = [];
-      saveCart();
-      updateCartButton();
-      showCart();
-    }
+  function getTotalPrice() {
+    return cart.reduce((sum, item) => {
+      const price = parseInt(item.price.replace(/\D/g, ""), 10);
+      return sum + price * item.count;
+    }, 0);
+  }
 
-    async function loadProductsFromCSV() {
-      const res = await fetch(CSV_URL);
-      const text = await res.text();
-      const lines = text.trim().split("\n");
-      const products = lines.slice(1).map(line => {
-        const [name, price, image] = line.split(",");
-        return { name, price, image };
-      });
+  function clearCart() {
+    cart = [];
+    saveCart();
+    updateCartButton();
+    showCart();
+  }
 
-      const list = document.getElementById("product-list");
-      list.innerHTML = "";
-      products.forEach(p => {
-        const el = document.createElement("div");
-        el.className = "product";
-        el.innerHTML = `
-          <img src="${p.image}" alt="${p.name}">
-          <h3>${p.name}</h3>
-          <p>${p.price}</p>
-          <button class="add-btn">Добавить</button>
-        `;
+  async function loadProductsFromCSV() {
+    const res = await fetch(CSV_URL);
+    const text = await res.text();
+    const lines = text.trim().split("\n");
+    const products = lines.slice(1).map(line => {
+      const [name, price, image] = line.split(",");
+      return { name, price, image };
+    });
 
-        el.querySelector(".add-btn").addEventListener("click", (e) => {
-          const existing = cart.find(item => item.name === p.name);
-          if (existing) {
-            existing.count += 1;
-          } else {
-            cart.push({ ...p, count: 1 });
-          }
-          saveCart();
-          updateCartButton();
+    const list = document.getElementById("product-list");
+    list.innerHTML = "";
+    products.forEach(p => {
+      const el = document.createElement("div");
+      el.className = "product";
+      el.innerHTML = `
+        <img src="${p.image}" alt="${p.name}">
+        <h3>${p.name}</h3>
+        <p>${p.price}</p>
+        <button class="add-btn">Добавить</button>
+      `;
+      el.querySelector(".add-btn").addEventListener("click", () => {
+        document.getElementById("click-sound").play(); // звук
 
-          // ✨ Анимация "полет"
-          const img = el.querySelector("img");
-          const imgRect = img.getBoundingClientRect();
-          const cartBtn = document.getElementById("cart-button");
-          const cartRect = cartBtn.getBoundingClientRect();
+        const existing = cart.find(item => item.name === p.name);
+        if (existing) {
+          existing.count += 1;
+        } else {
+          cart.push({ ...p, count: 1 });
+        }
+        saveCart();
+        updateCartButton();
 
-          const flyingImg = img.cloneNode(true);
-          flyingImg.style.position = "fixed";
-          flyingImg.style.zIndex = "1000";
-          flyingImg.style.left = imgRect.left + "px";
-          flyingImg.style.top = imgRect.top + "px";
-          flyingImg.style.width = imgRect.width + "px";
-          flyingImg.style.height = imgRect.height + "px";
-          flyingImg.style.transition = "all 0.8s ease-in-out";
-          document.body.appendChild(flyingImg);
+        // Анимация
+        const img = el.querySelector("img");
+        const imgRect = img.getBoundingClientRect();
+        const cartBtn = document.getElementById("cart-button");
+        const cartRect = cartBtn.getBoundingClientRect();
 
-          requestAnimationFrame(() => {
-            flyingImg.style.left = cartRect.left + "px";
-            flyingImg.style.top = cartRect.top + "px";
-            flyingImg.style.width = "30px";
-            flyingImg.style.height = "30px";
-            flyingImg.style.opacity = "0.5";
-          });
+        const flyingImg = img.cloneNode(true);
+        flyingImg.style.position = "fixed";
+        flyingImg.style.zIndex = "1000";
+        flyingImg.style.left = imgRect.left + "px";
+        flyingImg.style.top = imgRect.top + "px";
+        flyingImg.style.width = imgRect.width + "px";
+        flyingImg.style.height = imgRect.height + "px";
+        flyingImg.style.transition = "all 0.8s ease-in-out";
+        document.body.appendChild(flyingImg);
 
-          setTimeout(() => flyingImg.remove(), 900);
+        requestAnimationFrame(() => {
+          flyingImg.style.left = cartRect.left + "px";
+          flyingImg.style.top = cartRect.top + "px";
+          flyingImg.style.width = "30px";
+          flyingImg.style.height = "30px";
+          flyingImg.style.opacity = "0.5";
         });
 
-        list.appendChild(el);
+        setTimeout(() => flyingImg.remove(), 900);
       });
+      list.appendChild(el);
+    });
+  }
+
+  function loadUserData() {
+    const savedData = JSON.parse(localStorage.getItem("userData")) || [];
+    const list = document.getElementById("saved-users-list");
+    list.innerHTML = "<strong>Сохранённые пользователи:</strong><br>";
+
+    savedData.forEach((user, index) => {
+      const div = document.createElement("div");
+      div.innerHTML = `
+        <button onclick="selectUser(${index})">${user.name} - ${user.phone} - ${user.address}</button>
+        <button onclick="deleteUser(${index})" style="margin-left: 0.5rem;">🗑</button>
+      `;
+      list.appendChild(div);
+    });
+  }
+
+  function selectUser(index) {
+    const savedData = JSON.parse(localStorage.getItem("userData")) || [];
+    const user = savedData[index];
+    if (user) {
+      document.getElementById("name").value = user.name;
+      document.getElementById("phone").value = user.phone;
+      document.getElementById("address").value = user.address;
+    }
+  }
+
+  function deleteUser(index) {
+    let savedData = JSON.parse(localStorage.getItem("userData")) || [];
+    if (confirm(`Удалить пользователя ${savedData[index].name}?`)) {
+      savedData.splice(index, 1);
+      localStorage.setItem("userData", JSON.stringify(savedData));
+      loadUserData();
+    }
+  }
+
+  function openPreFilledForm() {
+    let name = document.getElementById("name").value.trim();
+    let rawPhone = document.getElementById("phone").value.trim();
+    let address = document.getElementById("address").value.trim();
+
+    if (!name || !rawPhone || !address) {
+      alert("Заполните имя, телефон и адрес.");
+      return;
     }
 
-    function loadUserData() {
-      const savedData = JSON.parse(localStorage.getItem("userData")) || [];
-      const list = document.getElementById("saved-users-list");
-      list.innerHTML = "<strong>Сохранённые пользователи:</strong><br>";
-      savedData.forEach((user, index) => {
-        const div = document.createElement("div");
-        div.innerHTML = `
-          <button onclick="selectUser(${index})">${user.name} - ${user.phone} - ${user.address}</button>
-          <button onclick="deleteUser(${index})" style="margin-left: 0.5rem;">🗑</button>
-        `;
-        list.appendChild(div);
-      });
+    if (!/^8\d{10}$/.test(rawPhone)) {
+      alert("Телефон должен быть в формате 8XXXXXXXXXX (11 цифр).");
+      return;
     }
 
-    function selectUser(index) {
-      const savedData = JSON.parse(localStorage.getItem("userData")) || [];
-      const user = savedData[index];
-      if (user) {
-        document.getElementById("name").value = user.name;
-        document.getElementById("phone").value = user.phone;
-        document.getElementById("address").value = user.address;
-      }
+    const phone = rawPhone;
+    name = name.replace(/,/g, " ");
+    address = address.replace(/,/g, " ");
+
+    const order = cart.map(p => `${p.name.replace(/,/g, " ")} (${p.price.replace(/,/g, " ")}) × ${p.count}`).join("<br> ");
+    const total = getTotalPrice();
+    const status = "Оформлен";
+
+    let savedData = JSON.parse(localStorage.getItem("userData")) || [];
+    const existing = savedData.find(u => u.phone === phone);
+    if (!existing) {
+      savedData.push({ name, phone, address });
+      localStorage.setItem("userData", JSON.stringify(savedData));
+      loadUserData();
     }
 
-    function deleteUser(index) {
-      let savedData = JSON.parse(localStorage.getItem("userData")) || [];
-      if (confirm(`Удалить пользователя ${savedData[index].name}?`)) {
-        savedData.splice(index, 1);
-        localStorage.setItem("userData", JSON.stringify(savedData));
-        loadUserData();
-      }
-    }
+    const base = "https://docs.google.com/forms/d/e/1FAIpQLSegQ5wqbLaMU094d5y1EqfGDYedlBa362BoqFeBfA-RXiAQqg/viewform";
+    const params = new URLSearchParams({
+      "entry.1735845883": name,
+      "entry.422081956": phone,
+      "entry.1694441696": address,
+      "entry.1899533559": order,
+      "entry.315266378": total,
+      "entry.1207854373": status
+    });
 
-    function openPreFilledForm() {
-      let name = document.getElementById("name").value.trim();
-      let rawPhone = document.getElementById("phone").value.trim();
-      let address = document.getElementById("address").value.trim();
-      if (!name || !rawPhone || !address) {
-        alert("Заполните имя, телефон и адрес.");
-        return;
-      }
-      if (!/^8\d{10}$/.test(rawPhone)) {
-        alert("Телефон должен быть в формате 8XXXXXXXXXX (11 цифр).");
-        return;
-      }
+    window.open(`${base}?${params.toString()}`, "_blank");
+  }
 
-      const phone = rawPhone;
-      name = name.replace(/,/g, " ");
-      address = address.replace(/,/g, " ");
-      const order = cart.map(p => `${p.name.replace(/,/g, " ")} (${p.price.replace(/,/g, " ")}) × ${p.count}`).join("<br> ");
-      const total = getTotalPrice();
-      const status = "Оформлен";
+  loadCart();
+  updateCartButton();
+  loadProductsFromCSV();
+  loadUserData();
+  document.getElementById("cart-button").addEventListener("click", showCart);
+</script>
 
-      let savedData = JSON.parse(localStorage.getItem("userData")) || [];
-      const existing = savedData.find(u => u.phone === phone);
-      if (!existing) {
-        savedData.push({ name, phone, address });
-        localStorage.setItem("userData", JSON.stringify(savedData));
-        loadUserData();
-      }
-
-      const base = "https://docs.google.com/forms/d/e/1FAIpQLSegQ5wqbLaMU094d5y1EqfGDYedlBa362BoqFeBfA-RXiAQqg/viewform";
-      const params = new URLSearchParams({
-        "entry.1735845883": name,
-        "entry.422081956": phone,
-        "entry.1694441696": address,
-        "entry.1899533559": order,
-        "entry.315266378": total,
-        "entry.1207854373": status
-      });
-
-      window.open(`${base}?${params.toString()}`, "_blank");
-    }
-
-    loadCart();
-    updateCartButton();
-    loadProductsFromCSV();
-    loadUserData();
-    document.getElementById("cart-button").addEventListener("click", showCart);
-  </script>
-
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js')
-        .then(() => console.log("Service Worker зарегистрирован"));
-    }
-  </script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js')
+      .then(() => console.log("Service Worker зарегистрирован"));
+  }
+</script>
 </body>
 </html>
