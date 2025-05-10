@@ -49,6 +49,24 @@
       z-index: 1000;
     }
 
+    #cart-items {
+      margin-bottom: 1rem;
+    }
+
+    #cart-items div {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #cart-items button {
+      background: #e53935;
+      color: white;
+      border: none;
+      padding: 0.2rem 0.5rem;
+      border-radius: 5px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -63,6 +81,7 @@
   <h3>Корзина</h3>
   <div id="cart-items"></div>
   <button onclick="clearCart()">Очистить корзину</button>
+  <button onclick="sendCart()">Отправить корзину</button>
 </div>
 
 <!-- Список товаров -->
@@ -85,6 +104,12 @@
     saveCart();
     updateCartButton();
     showCart();
+  }
+
+  // Функция отправки корзины
+  function sendCart() {
+    const cartData = cart.map(item => `${item.name} – ${item.price} × ${item.count}`).join("\n");
+    alert(`Корзина отправлена: \n${cartData}`);
   }
 
   // Функция сохранения корзины в localStorage
