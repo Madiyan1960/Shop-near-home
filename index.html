@@ -126,8 +126,6 @@
       <strong>Итого: ${total} ₸</strong><br><br>
       <button onclick="clearCart()">🧹 Очистить корзину</button>
     `;
-    
-    
     container.appendChild(totalDiv);
   }
 
@@ -160,6 +158,12 @@
     saveCart();
     updateCartButton();
     showCart();
+
+    // Повторная активация кнопок "Добавить"
+    const buttons = document.querySelectorAll('.add-btn');
+    buttons.forEach(button => {
+        button.disabled = false; // активация кнопки
+    });
   }
 
   async function loadProductsFromCSV() {
@@ -182,19 +186,10 @@
         <p>${p.price}</p>
         <button class="add-btn">Добавить</button>
       `;
-      
-      const addButton = el.querySelector(".add-btn");
-
-      // Проверка, добавлен ли товар в корзину
-      const existing = cart.find(item => item.name === p.name);
-      if (existing) {
-        addButton.disabled = true; // Делаем кнопку неактивной
-        addButton.textContent = "В корзине"; // Меняем текст кнопки
-      }
-
-      addButton.addEventListener("click", () => {
+      el.querySelector(".add-btn").addEventListener("click", () => {
         document.getElementById("click-sound").play(); // звук
 
+        const existing = cart.find(item => item.name === p.name);
         if (existing) {
           existing.count += 1;
         } else {
@@ -202,10 +197,6 @@
         }
         saveCart();
         updateCartButton();
-
-        // Делаем кнопку неактивной, если товар уже в корзине
-        addButton.disabled = true;
-        addButton.textContent = "В корзине";
 
         // Анимация
         const img = el.querySelector("img");
@@ -233,7 +224,6 @@
 
         setTimeout(() => flyingImg.remove(), 900);
       });
-
       list.appendChild(el);
     });
   }
@@ -329,5 +319,6 @@
       .then(() => console.log("Service Worker зарегистрирован"));
   }
 </script>
+
 </body>
 </html>
