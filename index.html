@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
   <meta charset="UTF-8">
   <title>Мини-магазин</title>
   <style>
     body { font-family: sans-serif; margin: 20px; }
+    <button onclick="downloadPDF()">📄 Скачать заказ (PDF)</button>
+
     .grid { display: flex; flex-wrap: wrap; gap: 10px; }
     .product {
       border: 1px solid #ccc;
@@ -79,6 +83,28 @@ fetch(API_URL, { headers: HEADERS })
     });
   })
   .catch(() => document.getElementById('products').innerText = 'Ошибка загрузки');
+  async function downloadPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  let y = 10;
+
+  doc.setFontSize(14);
+  doc.text("🧾 Заказ из магазина", 10, y);
+  y += 10;
+
+  let total = 0;
+  cart.forEach(item => {
+    doc.text(`${item.name} – ${item.price} тг`, 10, y);
+    y += 8;
+    total += item.price;
+  });
+
+  doc.setFontSize(12);
+  doc.text(`Итого: ${total} тг`, 10, y + 5);
+
+  doc.save("zakaz.pdf");
+}
+
 </script>
 
 </body>
