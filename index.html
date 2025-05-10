@@ -36,7 +36,7 @@
 <div class="grid" id="products">Загрузка...</div>
 
 <h3>🧺 Корзина</h3>
-<button onclick="downloadPDF()">📄 Скачать заказ (PDF)</button>
+<button onclick="downloadText()">📄 Скачать заказ (TXT)</button>
 <div id="cart">Корзина пуста</div>
 
 <script>
@@ -46,14 +46,6 @@ const TABLE_NAME = 'Товары';
 const API_URL = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}`;
 const HEADERS = { Authorization: `Bearer ${API_TOKEN}` };
 const cart = [];
-
-// Встраиваем шрифт DejaVuSans (Base64)
-const dejavuFont = "AAEAAAASAQAABAAgR0RFRrRCsIIAAACcAAAAYGNtYXAAAwAAAAFcAAAACGdseWZ4HhF8AAABHAAAA...";  // Вставить сюда base64 строку шрифта
-
-window.jspdf.jsPDF.API.events.push(['addFonts', function () {
-  this.addFileToVFS('DejaVuSans.ttf', dejavuFont);
-  this.addFont('DejaVuSans.ttf', 'DejaVuSans', 'normal');
-}]);
 
 function renderCart() {
   const c = document.getElementById('cart');
@@ -90,28 +82,22 @@ fetch(API_URL, { headers: HEADERS })
   })
   .catch(() => document.getElementById('products').innerText = 'Ошибка загрузки');
 
-function downloadPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-
-  doc.setFont('DejaVuSans');
-  doc.setFontSize(14);
-  let y = 10;
-
-  doc.text("🧾 Заказ из магазина", 10, y);
-  y += 10;
+function downloadText() {
+  let text = "🧾 Заказ из магазина\n\n";
 
   let total = 0;
   cart.forEach(item => {
-    doc.text(`${item.name} – ${item.price} тг`, 10, y);
-    y += 8;
+    text += `${item.name} – ${item.price} тг\n`;
     total += item.price;
   });
 
-  doc.setFontSize(12);
-  doc.text(`Итого: ${total} тг`, 10, y + 5);
+  text += `\nИтого: ${total} тг`;
 
-  doc.save("zakaz.pdf");
+  const blob = new Blob([text], { type: 'text/plain' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'zakaz.txt';
+  link.click();
 }
 </script>
 
