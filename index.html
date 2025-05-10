@@ -31,6 +31,24 @@
       cursor: pointer;
       z-index: 100;
     }
+
+    /* Стиль для модального окна корзины */
+    #cart-modal {
+      display: none;
+      position: fixed;
+      top: 60px;
+      right: 20px;
+      background: white;
+      border: 1px solid #ccc;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      max-width: 350px;
+      max-height: 80vh;
+      overflow-y: auto;
+      z-index: 1000;
+    }
+
   </style>
 </head>
 <body>
@@ -40,8 +58,17 @@
 <!-- Кнопка корзины -->
 <button id="cart-button">Корзина (0)</button>
 
+<!-- Модальное окно корзины -->
+<div id="cart-modal">
+  <h3>Корзина</h3>
+  <div id="cart-items"></div>
+  <button onclick="clearCart()">Очистить корзину</button>
+</div>
+
 <!-- Список товаров -->
 <div id="product-list" class="product-list"></div>
+
+<audio id="click-sound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3" preload="auto"></audio>
 
 <script>
   const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQoChjmnMdjDn-siHAEHrBpDaz-3tkFx68Peo1LXU_Nc8R5XTm5Gee2pi-O9jz1XyYhhCGCDnTKa0cR/pub?gid=0&single=true&output=csv";
@@ -50,6 +77,47 @@
   // Функция обновления текста на кнопке корзины
   function updateCartButton() {
     document.getElementById("cart-button").textContent = `Корзина (${cart.length})`;
+  }
+
+  // Функция очистки корзины
+  function clearCart() {
+    cart = [];
+    saveCart();
+    updateCartButton();
+    showCart();
+  }
+
+  // Функция сохранения корзины в localStorage
+  function saveCart() {
+    localStorage.setItem("cart", JSON.stringify(cart));
+  }
+
+  // Функция отображения корзины
+  function showCart() {
+    const modal = document.getElementById("cart-modal");
+    modal.style.display = modal.style.display === "block" ? "none" : "block";
+
+    const container = document.getElementById("cart-items");
+    container.innerHTML = "";
+
+    cart.forEach((p, index) => {
+      const item = document.createElement("div");
+      item.innerHTML = `
+        <p>
+          ${p.name} – ${p.price} × ${p.count}
+          <button onclick="removeItem(${index})">🗑</button>
+        </p>
+      `;
+      container.appendChild(item);
+    });
+  }
+
+  // Удалить товар из корзины
+  function removeItem(index) {
+    cart.splice(index, 1);
+    saveCart();
+    updateCartButton();
+    showCart();
   }
 
   // Загрузка товаров из CSV
@@ -83,7 +151,10 @@
         button.disabled = true;
       }
 
+      // Добавление товара в корзину
       button.addEventListener("click", () => {
+        document.getElementById("click-sound").play(); // воспроизводим звук
+
         const existing = cart.find(item => item.name === p.name);
         if (existing) {
           existing.count += 1;
@@ -92,11 +163,38 @@
         }
 
         // Обновляем корзину и кнопку
+        saveCart();
         updateCartButton();
 
         // Обновляем текст кнопки и делаем её неактивной
         button.textContent = "В корзине";
         button.disabled = true;
+
+        // Анимация
+        const img = el.querySelector("img");
+        const imgRect = img.getBoundingClientRect();
+        const cartBtn = document.getElementById("cart-button");
+        const cartRect = cartBtn.getBoundingClientRect();
+
+        const flyingImg = img.cloneNode(true);
+        flyingImg.style.position = "fixed";
+        flyingImg.style.zIndex = "1000";
+        flyingImg.style.left = imgRect.left + "px";
+        flyingImg.style.top = imgRect.top + "px";
+        flyingImg.style.width = imgRect.width + "px";
+        flyingImg.style.height = imgRect.height + "px";
+        flyingImg.style.transition = "all 0.8s ease-in-out";
+        document.body.appendChild(flyingImg);
+
+        requestAnimationFrame(() => {
+          flyingImg.style.left = cartRect.left + "px";
+          flyingImg.style.top = cartRect.top + "px";
+          flyingImg.style.width = "30px";
+          flyingImg.style.height = "30px";
+          flyingImg.style.opacity = "0.5";
+        });
+
+        setTimeout(() => flyingImg.remove(), 900);
       });
 
       list.appendChild(el);
@@ -105,6 +203,9 @@
 
   // Загружаем товары
   loadProductsFromCSV();
+
+  // Обработчик кнопки корзины
+  document.getElementById("cart-button").addEventListener("click", showCart);
 </script>
 
 </body>
