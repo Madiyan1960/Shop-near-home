@@ -14,7 +14,6 @@
     .product h3 { margin: 0.4rem 0 0.2rem; font-size: 0.9rem; }
     .product p { margin: 0; font-size: 0.85rem; color: #555; }
     .add-btn { margin-top: 0.4rem; padding: 0.3rem 0.5rem; background: #2e7d32; color: white; border: none; border-radius: 5px; cursor: pointer; }
-    .add-btn:disabled { background: #888; cursor: not-allowed; }
 
     @media (max-width: 600px) {
       .product-list { grid-template-columns: repeat(2, 1fr); }
@@ -32,6 +31,24 @@
       cursor: pointer;
       z-index: 100;
     }
+
+    #cart-modal {
+      display: none;
+      position: fixed;
+      top: 60px;
+      right: 20px;
+      background: white;
+      border: 1px solid #ccc;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      max-width: 350px;
+      max-height: 80vh;
+      overflow-y: auto;
+      z-index: 1000;
+    }
+
+    #cart-items p { margin: 0.5rem 0; }
   </style>
 </head>
 <body>
@@ -39,18 +56,28 @@
 <h3>Магазин у дома</h3>
 <button id="cart-button">Корзина (0)</button>
 
+<audio id="click-sound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3" preload="auto"></audio>
+
+<div id="cart-modal">
+  <h3>Корзина</h3>
+  <div id="cart-items"></div>
+  <p><label for="name">Имя:</label><br><input type="text" id="name" /></p>
+  <p><label for="phone">Телефон:</label><br><input type="text" id="phone" placeholder="8XXXXXXXXXX" /></p>
+  <p><label for="address">Адрес:</label><br><input type="text" id="address" /></p>
+  <div id="saved-users-list"></div>
+  <button onclick="openPreFilledForm()">Отправить заказ</button>
+</div>
+
 <div id="product-list" class="product-list"></div>
 
 <script>
   const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQoChjmnMdjDn-siHAEHrBpDaz-3tkFx68Peo1LXU_Nc8R5XTm5Gee2pi-O9jz1XyYhhCGCDnTKa0cR/pub?gid=0&single=true&output=csv";
   let cart = [];
 
-  // Сохраняем корзину в localStorage
   function saveCart() {
     localStorage.setItem("cart", JSON.stringify(cart));
   }
 
-  // Загружаем корзину из localStorage
   function loadCart() {
     const data = localStorage.getItem("cart");
     if (data) {
@@ -62,17 +89,80 @@
     }
   }
 
-  // Получаем общее количество товаров в корзине
   function getTotalCount() {
     return cart.reduce((sum, item) => sum + item.count, 0);
   }
 
-  // Обновляем текст на кнопке корзины
   function updateCartButton() {
-    document.getElementById("cart-button").textContent = `Корзина (${getTotalCount()})`;
+    const cartButton = document.getElementById("cart-button");
+    if (getTotalCount() > 0) {
+      cartButton.textContent = `В корзине (${getTotalCount()})`;
+    } else {
+      cartButton.textContent = "Корзина (0)";
+    }
   }
 
-  // Загрузить товары из CSV
+  function showCart() {
+    const modal = document.getElementById("cart-modal");
+    modal.style.display = modal.style.display === "block" ? "none" : "block";
+
+    const container = document.getElementById("cart-items");
+    container.innerHTML = "";
+
+    cart.forEach((p, index) => {
+      const item = document.createElement("div");
+      item.innerHTML = `
+        <p>
+          ${p.name} – ${p.price} × ${p.count}
+          <button onclick="changeCount(${index}, 1)">+</button>
+          <button onclick="changeCount(${index}, -1)">−</button>
+          <button onclick="removeItem(${index})">🗑</button>
+        </p>
+      `;
+      container.appendChild(item);
+    });
+
+    const total = getTotalPrice();
+    const totalDiv = document.createElement("div");
+    totalDiv.innerHTML = `
+      <hr>
+      <strong>Итого: ${total} ₸</strong><br><br>
+      <button onclick="clearCart()">🧹 Очистить корзину</button>
+    `;
+    container.appendChild(totalDiv);
+  }
+
+  function changeCount(index, delta) {
+    cart[index].count += delta;
+    if (cart[index].count <= 0) {
+      cart.splice(index, 1);
+    }
+    saveCart();
+    updateCartButton();
+    showCart();
+  }
+
+  function removeItem(index) {
+    cart.splice(index, 1);
+    saveCart();
+    updateCartButton();
+    showCart();
+  }
+
+  function getTotalPrice() {
+    return cart.reduce((sum, item) => {
+      const price = parseInt(item.price.replace(/\D/g, ""), 10);
+      return sum + price * item.count;
+    }, 0);
+  }
+
+  function clearCart() {
+    cart = [];
+    saveCart();
+    updateCartButton();
+    showCart();
+  }
+
   async function loadProductsFromCSV() {
     const res = await fetch(CSV_URL);
     const text = await res.text();
@@ -84,43 +174,39 @@
 
     const list = document.getElementById("product-list");
     list.innerHTML = "";
-
     products.forEach(p => {
       const el = document.createElement("div");
       el.className = "product";
-      const inCart = cart.find(item => item.name === p.name);
       el.innerHTML = `
         <img src="${p.image}" alt="${p.name}">
         <h3>${p.name}</h3>
         <p>${p.price}</p>
-        <button class="add-btn" ${inCart ? 'disabled' : ''}>
-          ${inCart ? "В корзине" : "Добавить"}
-        </button>
+        <button class="add-btn">Добавить</button>
       `;
-      const btn = el.querySelector(".add-btn");
-
-      if (!inCart) {
-        btn.addEventListener("click", () => {
+      const addButton = el.querySelector(".add-btn");
+      addButton.addEventListener("click", () => {
+        const existing = cart.find(item => item.name === p.name);
+        if (existing) {
+          existing.count += 1;
+        } else {
           cart.push({ ...p, count: 1 });
-          saveCart();
-          updateCartButton();
-          loadProductsFromCSV(); // Перезагружаем товары для обновления кнопок
-        });
-      }
-
+        }
+        saveCart();
+        updateCartButton();
+        addButton.textContent = "В корзине";
+        setTimeout(() => {
+          addButton.textContent = "Добавить";
+        }, 2000); // кнопка возвращается к "Добавить" через 2 секунды
+      });
       list.appendChild(el);
     });
   }
 
-  // Обработчик для открытия корзины
-  document.getElementById("cart-button").addEventListener("click", function() {
-    alert("Корзина:\n" + cart.map(item => `${item.name} x${item.count}`).join("\n"));
-  });
-
-  // Загрузка данных
   loadCart();
-  loadProductsFromCSV();
   updateCartButton();
+  loadProductsFromCSV();
+
+  document.getElementById("cart-button").addEventListener("click", showCart);
 </script>
 
 </body>
