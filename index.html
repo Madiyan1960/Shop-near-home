@@ -147,9 +147,9 @@ fetch(API_URL, { headers: HEADERS })
       div.className = 'product';
       div.innerHTML = `
         <img src="${f['Фото']?.[0]?.url || ''}" alt="">
-        <div><b>${f['Products']}</b></div>
-        <div>${f['Total']} тг</div>
-        <button onclick="addToCart('${f['Products']}', ${f['Total']})">Добавить</button>
+        <div><b>${f['Название']}</b></div>
+        <div>${f['Цена']} тг</div>
+        <button onclick="addToCart('${f['Название']}', ${f['Цена']})">Добавить</button>
       `;
       p.appendChild(div);
     });
