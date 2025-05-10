@@ -47,6 +47,14 @@ const API_URL = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}`;
 const HEADERS = { Authorization: `Bearer ${API_TOKEN}` };
 const cart = [];
 
+// Встраиваем шрифт DejaVuSans (Base64)
+const dejavuFont = "AAEAAAASAQAABAAgR0RFRrRCsIIAAACcAAAAYGNtYXAAAwAAAAFcAAAACGdseWZ4HhF8AAABHAAAA...";  // Вставить сюда base64 строку шрифта
+
+window.jspdf.jsPDF.API.events.push(['addFonts', function () {
+  this.addFileToVFS('DejaVuSans.ttf', dejavuFont);
+  this.addFont('DejaVuSans.ttf', 'DejaVuSans', 'normal');
+}]);
+
 function renderCart() {
   const c = document.getElementById('cart');
   if (!cart.length) return c.innerHTML = 'Корзина пуста';
@@ -81,15 +89,6 @@ fetch(API_URL, { headers: HEADERS })
     });
   })
   .catch(() => document.getElementById('products').innerText = 'Ошибка загрузки');
-
-// Подключаем встроенный шрифт DejaVuSans
-const dejavuFont = `AAEAAAASAQAABAAgR0RFRrRCsIIAAACcAAAAYGNtYXAAAwAAAAFcAAAACGdseWZ4HhF8AAABHAAAA...
-...`; // ← Здесь будет длинная строка base64 шрифта
-
-window.jspdf.jsPDF.API.events.push(['addFonts', function () {
-  this.addFileToVFS('DejaVuSans.ttf', dejavuFont);
-  this.addFont('DejaVuSans.ttf', 'DejaVuSans', 'normal');
-}]);
 
 function downloadPDF() {
   const { jsPDF } = window.jspdf;
