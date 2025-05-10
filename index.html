@@ -14,12 +14,13 @@
     .product h3 { margin: 0.4rem 0 0.2rem;font-size: 0.9rem; }
     .product p { margin: 0;font-size: 0.85rem; color: #555; }
     .add-btn { margin-top: 0.4rem; padding: 0.3rem 0.5rem; background: #2e7d32; color: white; border: none; border-radius: 5px; cursor: pointer; }
- /* Две колонки на мобильных устройствах */
-  @media (max-width: 600px) {
-    .product-list {
-      grid-template-columns: repeat(2, 1fr);
+
+    @media (max-width: 600px) {
+      .product-list {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
-  }
+
     #cart-button {
       position: fixed;
       top: 1rem;
@@ -44,8 +45,8 @@
       border-radius: 8px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.2);
       max-width: 350px;
-      max-height: 80vh; /* Ограничение высоты */
-      overflow-y: auto;  /* Прокрутка при переполнении */
+      max-height: 80vh;
+      overflow-y: auto;
       z-index: 1000;
     }
 
@@ -62,13 +63,10 @@
   <div id="cart-modal">
     <h3>Корзина</h3>
     <div id="cart-items"></div>
-
     <p><label for="name">Имя:</label><br><input type="text" id="name" /></p>
     <p><label for="phone">Телефон:</label><br><input type="text" id="phone" placeholder="8XXXXXXXXXX" /></p>
     <p><label for="address">Адрес:</label><br><input type="text" id="address" /></p>
-
     <div id="saved-users-list"></div>
-
     <button onclick="openPreFilledForm()">Отправить заказ</button>
   </div>
 
@@ -104,10 +102,8 @@
     function showCart() {
       const modal = document.getElementById("cart-modal");
       modal.style.display = modal.style.display === "block" ? "none" : "block";
-
       const container = document.getElementById("cart-items");
       container.innerHTML = "";
-
       cart.forEach((p, index) => {
         const item = document.createElement("div");
         item.innerHTML = `
@@ -120,7 +116,6 @@
         `;
         container.appendChild(item);
       });
-
       const total = getTotalPrice();
       const totalDiv = document.createElement("div");
       totalDiv.innerHTML = `
@@ -182,7 +177,8 @@
           <p>${p.price}</p>
           <button class="add-btn">Добавить</button>
         `;
-        el.querySelector(".add-btn").addEventListener("click", () => {
+
+        el.querySelector(".add-btn").addEventListener("click", (e) => {
           const existing = cart.find(item => item.name === p.name);
           if (existing) {
             existing.count += 1;
@@ -191,7 +187,34 @@
           }
           saveCart();
           updateCartButton();
+
+          // ✨ Анимация "полет"
+          const img = el.querySelector("img");
+          const imgRect = img.getBoundingClientRect();
+          const cartBtn = document.getElementById("cart-button");
+          const cartRect = cartBtn.getBoundingClientRect();
+
+          const flyingImg = img.cloneNode(true);
+          flyingImg.style.position = "fixed";
+          flyingImg.style.zIndex = "1000";
+          flyingImg.style.left = imgRect.left + "px";
+          flyingImg.style.top = imgRect.top + "px";
+          flyingImg.style.width = imgRect.width + "px";
+          flyingImg.style.height = imgRect.height + "px";
+          flyingImg.style.transition = "all 0.8s ease-in-out";
+          document.body.appendChild(flyingImg);
+
+          requestAnimationFrame(() => {
+            flyingImg.style.left = cartRect.left + "px";
+            flyingImg.style.top = cartRect.top + "px";
+            flyingImg.style.width = "30px";
+            flyingImg.style.height = "30px";
+            flyingImg.style.opacity = "0.5";
+          });
+
+          setTimeout(() => flyingImg.remove(), 900);
         });
+
         list.appendChild(el);
       });
     }
@@ -200,7 +223,6 @@
       const savedData = JSON.parse(localStorage.getItem("userData")) || [];
       const list = document.getElementById("saved-users-list");
       list.innerHTML = "<strong>Сохранённые пользователи:</strong><br>";
-
       savedData.forEach((user, index) => {
         const div = document.createElement("div");
         div.innerHTML = `
@@ -234,12 +256,10 @@
       let name = document.getElementById("name").value.trim();
       let rawPhone = document.getElementById("phone").value.trim();
       let address = document.getElementById("address").value.trim();
-
       if (!name || !rawPhone || !address) {
         alert("Заполните имя, телефон и адрес.");
         return;
       }
-
       if (!/^8\d{10}$/.test(rawPhone)) {
         alert("Телефон должен быть в формате 8XXXXXXXXXX (11 цифр).");
         return;
@@ -248,7 +268,6 @@
       const phone = rawPhone;
       name = name.replace(/,/g, " ");
       address = address.replace(/,/g, " ");
-
       const order = cart.map(p => `${p.name.replace(/,/g, " ")} (${p.price.replace(/,/g, " ")}) × ${p.count}`).join("<br> ");
       const total = getTotalPrice();
       const status = "Оформлен";
