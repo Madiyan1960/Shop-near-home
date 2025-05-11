@@ -2,159 +2,35 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>Магазин</title>
-  <style>
-    body { font-family: sans-serif; margin: 20px; }
-    #products { display: flex; flex-wrap: wrap; gap: 10px; }
-    .product {
-      flex: 0 0 calc(50% - 10px);
-      border: 1px solid #ccc;
-      padding: 10px;
-      border-radius: 8px;
-      box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-    }
-    .product input {
-      width: 50px;
-      margin-top: 5px;
-    }
-    .product button {
-      margin-top: 5px;
-      padding: 5px 10px;
-    }
-    .cart-float {
-      position: fixed;
-      right: 20px;
-      top: 20px;
-      background: #fff;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-      max-width: 300px;
-      z-index: 1000;
-    }
-    .cart-item { margin-bottom: 5px; }
-    #sendBtn, #whatsappBtn {
-      margin-top: 10px;
-      padding: 10px 15px;
-      font-weight: bold;
-      width: 100%;
-    }
-  </style>
+  <title>Товары из Airtable</title>
 </head>
 <body>
   <h1>Список товаров</h1>
-  <div id="products"></div>
-
-  <div class="cart-float">
-    <h3>Корзина</h3>
-    <div id="cart"></div>
-    <p><strong>Итого: <span id="total">0</span> тг</strong></p>
-    <button id="sendBtn" onclick="sendOrder()">Оформить заказ</button>
-    <button id="whatsappBtn" onclick="sendToWhatsApp()">WhatsApp</button>
-  </div>
+  <ul id="product-list"></ul>
 
   <script>
-    const cart = JSON.parse(localStorage.getItem('cart')) || [];
-    const cartDiv = document.getElementById('cart');
-    const totalSpan = document.getElementById('total');
-    const workerURL = 'https://shrill-haze-b867.mironovka6.workers.dev/';  // Замените на URL вашего Worker
+    // Замените на ваш адрес Cloudflare Worker
+    const workerUrl = 'https://shrill-haze-b867.mironovka6.workers.dev/products';
 
-    function updateCart() {
-      cartDiv.innerHTML = '';
-      let total = 0;
-      cart.forEach(item => {
-        const el = document.createElement('div');
-        el.className = 'cart-item';
-        el.textContent = `${item.name} - ${item.price} тг × ${item.qty}`;
-        cartDiv.appendChild(el);
-        total += item.price * item.qty;
+    fetch(workerUrl)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Ошибка при получении товаров');
+        }
+        return response.json();
+      })
+      .then(products => {
+        const list = document.getElementById('product-list');
+        products.forEach(item => {
+          const li = document.createElement('li');
+          li.textContent = item.fields.Наименование || 'Без названия';
+          list.appendChild(li);
+        });
+      })
+      .catch(error => {
+        console.error('Ошибка:', error);
+        document.body.innerHTML += `<p style="color:red;">${error.message}</p>`;
       });
-      totalSpan.textContent = total;
-      localStorage.setItem('cart', JSON.stringify(cart));
-    }
-
-    function addToCart(product, qty) {
-      if (qty < 1) return;
-      const existing = cart.find(p => p.id === product.id);
-      if (existing) {
-        existing.qty += qty;
-      } else {
-        cart.push({ ...product, qty });
-      }
-      updateCart();
-    }
-
-    async function loadProducts() {
-  const res = await fetch('https://https://shrill-haze-b867.mironovka6.workers.dev/products');
-  const data = await res.json();
-  const productsDiv = document.getElementById('products');
-
-  data.forEach(record => {
-    const product = {
-      id: record.id,
-      name: record.fields.Name,
-      price: record.fields.Price
-    };
-    const el = document.createElement('div');
-    el.className = 'product';
-    el.innerHTML = `
-      <strong>${product.name}</strong><br>
-      Цена: ${product.price} тг<br>
-      <input type="number" value="1" min="1" id="qty-${product.id}"><br>
-    `;
-    const btn = document.createElement('button');
-    btn.textContent = 'Добавить в корзину';
-    btn.onclick = () => {
-      const qty = parseInt(document.getElementById(`qty-${product.id}`).value);
-      addToCart(product, qty);
-    };
-    el.appendChild(btn);
-    productsDiv.appendChild(el);
-  });
-}
-
-
-    async function sendOrder() {
-      if (cart.length === 0) return alert('Корзина пуста');
-
-      const name = prompt("Введите имя:");
-      const phone = prompt("Введите номер телефона:");
-      const address = prompt("Введите адрес доставки:");
-
-      if (!name || !phone || !address) return alert("Все поля обязательны");
-
-      const productsText = cart.map(p => `${p.name} - ${p.price} тг × ${p.qty}`).join(', ');
-      const total = cart.reduce((sum, p) => sum + p.price * p.qty, 0);
-
-      const data = {
-        name: name,
-        phone: phone,
-        address: address,
-        products: productsText,
-        total: total
-      };
-
-      const res = await fetch(`${workerURL}/orders`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
-      });
-
-      const result = await res.json();
-      if (result.id) {
-        alert("Заказ успешно отправлен!");
-        cart.length = 0;
-        updateCart();
-      } else {
-        alert("Ошибка: " + JSON.stringify(result));
-      }
-    }
-
-    loadProducts();
-    updateCart();
   </script>
 </body>
 </html>
