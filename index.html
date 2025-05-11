@@ -13,23 +13,46 @@
       border-radius: 8px;
       box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
     }
+    .product input {
+      width: 50px;
+      margin-top: 5px;
+    }
     .product button {
       margin-top: 5px;
       padding: 5px 10px;
     }
-    .cart { margin-top: 20px; border-top: 2px solid #000; padding-top: 10px; }
+    .cart-float {
+      position: fixed;
+      right: 20px;
+      top: 20px;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      max-width: 300px;
+      z-index: 1000;
+    }
     .cart-item { margin-bottom: 5px; }
-    #sendBtn { margin-top: 10px; padding: 10px 15px; font-weight: bold; }
+    #sendBtn, #whatsappBtn {
+      margin-top: 10px;
+      padding: 10px 15px;
+      font-weight: bold;
+      width: 100%;
+    }
   </style>
 </head>
 <body>
   <h1>Список товаров</h1>
   <div id="products"></div>
 
-  <h2>Корзина</h2>
-  <div id="cart"></div>
-  <p><strong>Итого: <span id="total">0</span> тг</strong></p>
-  <button id="sendBtn" onclick="sendOrder()">Оформить заказ</button>
+  <div class="cart-float">
+    <h3>Корзина</h3>
+    <div id="cart"></div>
+    <p><strong>Итого: <span id="total">0</span> тг</strong></p>
+    <button id="sendBtn" onclick="sendOrder()">Оформить заказ</button>
+    <button id="whatsappBtn" onclick="sendToWhatsApp()">WhatsApp</button>
+  </div>
 
   <script>
     const apiKey = 'patH3Tqs7sTMEpo1G.f8d89a927a5f6e352cbe307be7a67e0e297ff32aaabf35e8115af646233845db';
@@ -37,7 +60,7 @@
     const productsTable = 'Товары';
     const ordersTable = 'Заказы';
 
-    const cart = [];
+    const cart = JSON.parse(localStorage.getItem('cart')) || [];
     const cartDiv = document.getElementById('cart');
     const totalSpan = document.getElementById('total');
 
@@ -52,14 +75,16 @@
         total += item.price * item.qty;
       });
       totalSpan.textContent = total;
+      localStorage.setItem('cart', JSON.stringify(cart));
     }
 
-    function addToCart(product) {
+    function addToCart(product, qty) {
+      if (qty < 1) return;
       const existing = cart.find(p => p.id === product.id);
       if (existing) {
-        existing.qty++;
+        existing.qty += qty;
       } else {
-        cart.push({ ...product, qty: 1 });
+        cart.push({ ...product, qty });
       }
       updateCart();
     }
@@ -80,41 +105,36 @@
         };
         const el = document.createElement('div');
         el.className = 'product';
-        el.innerHTML = `<strong>${product.name}</strong><br>Цена: ${product.price} тг<br>`;
+        el.innerHTML = `
+          <strong>${product.name}</strong><br>
+          Цена: ${product.price} тг<br>
+          <input type="number" value="1" min="1" id="qty-${product.id}"><br>
+        `;
         const btn = document.createElement('button');
         btn.textContent = 'Добавить в корзину';
-        btn.onclick = () => addToCart(product);
+        btn.onclick = () => {
+          const qty = parseInt(document.getElementById(`qty-${product.id}`).value);
+          addToCart(product, qty);
+        };
         el.appendChild(btn);
         productsDiv.appendChild(el);
       });
     }
 
     async function sendOrder() {
-      if (cart.length === 0) {
-        alert('Корзина пуста');
-        return;
-      }
+      if (cart.length === 0) return alert('Корзина пуста');
 
       const name = prompt("Введите имя:");
       const phone = prompt("Введите номер телефона:");
       const address = prompt("Введите адрес доставки:");
 
-      if (!name || !phone || !address) {
-        alert("Все поля должны быть заполнены");
-        return;
-      }
+      if (!name || !phone || !address) return alert("Все поля обязательны");
 
       const productsText = cart.map(p => `${p.name} - ${p.price} тг × ${p.qty}`).join(', ');
       const total = cart.reduce((sum, p) => sum + p.price * p.qty, 0);
 
       const data = {
-        fields: {
-          Name: name,
-          Phone: phone,
-          Address: address,
-          Products: productsText,
-          Total: total,
-                  }
+        fields: { Name: name, Phone: phone, Address: address, Products: productsText, Total: total }
       };
 
       const res = await fetch(`https://api.airtable.com/v0/${baseId}/${encodeURIComponent(ordersTable)}`, {
@@ -132,11 +152,26 @@
         cart.length = 0;
         updateCart();
       } else {
-        alert("Ошибка при отправке заказа: " + JSON.stringify(result));
+        alert("Ошибка: " + JSON.stringify(result));
       }
     }
 
+    function sendToWhatsApp() {
+      if (cart.length === 0) return alert('Корзина пуста');
+      const name = prompt("Ваше имя для WhatsApp:");
+      const address = prompt("Адрес доставки:");
+      if (!name || !address) return;
+
+      const list = cart.map(p => `- ${p.name} × ${p.qty} = ${p.price * p.qty} тг`).join('%0A');
+      const total = cart.reduce((sum, p) => sum + p.price * p.qty, 0);
+      const text = `Здравствуйте!%0AХочу сделать заказ:%0A${list}%0AИтого: ${total} тг%0AИмя: ${name}%0AАдрес: ${address}`;
+
+      const phone = 'YOUR_PHONE_NUMBER'; // В формате 7700... без +
+      window.open(`https://wa.me/${phone}?text=${text}`, '_blank');
+    }
+
     loadProducts();
+    updateCart();
   </script>
 </body>
 </html>
