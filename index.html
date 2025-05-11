@@ -58,7 +58,7 @@
     const cart = JSON.parse(localStorage.getItem('cart')) || [];
     const cartDiv = document.getElementById('cart');
     const totalSpan = document.getElementById('total');
-    const workerURL = 'https://shrill-haze-b867.mironovka6.workers.dev/products';  // Замените на URL вашего Worker
+    const workerURL = 'https://shrill-haze-b867.mironovka6.workers.dev/';  // Замените на URL вашего Worker
 
     function updateCart() {
       cartDiv.innerHTML = '';
@@ -86,38 +86,34 @@
     }
 
     async function loadProducts() {
-      try {
-        const res = await fetch(`${workerURL}/products`);  // Запрос на Worker для получения товаров
-        const data = await res.json();
+  const res = await fetch('https://https://shrill-haze-b867.mironovka6.workers.dev/products');
+  const data = await res.json();
+  const productsDiv = document.getElementById('products');
 
-        const productsDiv = document.getElementById('products');
-        data.forEach(record => {
-          const product = {
-            id: record.id,
-            name: record.fields.Name,
-            price: record.fields.Price
-          };
-          const el = document.createElement('div');
-          el.className = 'product';
-          el.innerHTML = `
-            <strong>${product.name}</strong><br>
-            Цена: ${product.price} тг<br>
-            <input type="number" value="1" min="1" id="qty-${product.id}"><br>
-          `;
-          const btn = document.createElement('button');
-          btn.textContent = 'Добавить в корзину';
-          btn.onclick = () => {
-            const qty = parseInt(document.getElementById(`qty-${product.id}`).value);
-            addToCart(product, qty);
-          };
-          el.appendChild(btn);
-          productsDiv.appendChild(el);
-        });
-      } catch (error) {
-        alert('Ошибка при загрузке товаров: ' + error.message);
-        console.error(error);
-      }
-    }
+  data.forEach(record => {
+    const product = {
+      id: record.id,
+      name: record.fields.Name,
+      price: record.fields.Price
+    };
+    const el = document.createElement('div');
+    el.className = 'product';
+    el.innerHTML = `
+      <strong>${product.name}</strong><br>
+      Цена: ${product.price} тг<br>
+      <input type="number" value="1" min="1" id="qty-${product.id}"><br>
+    `;
+    const btn = document.createElement('button');
+    btn.textContent = 'Добавить в корзину';
+    btn.onclick = () => {
+      const qty = parseInt(document.getElementById(`qty-${product.id}`).value);
+      addToCart(product, qty);
+    };
+    el.appendChild(btn);
+    productsDiv.appendChild(el);
+  });
+}
+
 
     async function sendOrder() {
       if (cart.length === 0) return alert('Корзина пуста');
