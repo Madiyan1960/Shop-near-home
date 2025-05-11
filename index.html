@@ -58,7 +58,7 @@
     const cart = JSON.parse(localStorage.getItem('cart')) || [];
     const cartDiv = document.getElementById('cart');
     const totalSpan = document.getElementById('total');
-    const workerURL = 'https://shrill-haze-b867.mironovka6.workers.dev/';  // Замените на URL вашего Worker
+    const workerURL = 'https://shrill-haze-b867.mironovka6.workers.dev/products';  // Замените на URL вашего Worker
 
     function updateCart() {
       cartDiv.innerHTML = '';
