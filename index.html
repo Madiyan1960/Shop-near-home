@@ -114,8 +114,7 @@
           Address: address,
           Products: productsText,
           Total: total,
-          Status: "Новый"
-        }
+                  }
       };
 
       const res = await fetch(`https://api.airtable.com/v0/${baseId}/${encodeURIComponent(ordersTable)}`, {
