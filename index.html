@@ -23,7 +23,7 @@
         const list = document.getElementById('product-list');
         products.forEach(item => {
           const li = document.createElement('li');
-          li.textContent = item.fields.Наименование || 'Без названия';
+          li.textContent = item.fields.name || 'name';
           list.appendChild(li);
         });
       })
