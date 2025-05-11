@@ -55,11 +55,8 @@
   </div>
 
   <script>
-    const apiKey = 'patH3Tqs7sTMEpo1G.f8d89a927a5f6e352cbe307be7a67e0e297ff32aaabf35e8115af646233845db';
     const baseId = 'appLj0ax0IDVaRTd4';
     const productsTable = 'Товары';
-    const ordersTable = 'Заказы';
-
     const cart = JSON.parse(localStorage.getItem('cart')) || [];
     const cartDiv = document.getElementById('cart');
     const totalSpan = document.getElementById('total');
@@ -92,7 +89,7 @@
     async function loadProducts() {
       const res = await fetch(`https://api.airtable.com/v0/${baseId}/${encodeURIComponent(productsTable)}`, {
         headers: {
-          Authorization: `Bearer ${apiKey}`
+          Authorization: `Bearer patH3Tqs7sTMEpo1G.f8d89a927a5f6e352cbe307be7a67e0e297ff32aaabf35e8115af646233845db`
         }
       });
       const data = await res.json();
@@ -134,13 +131,16 @@
       const total = cart.reduce((sum, p) => sum + p.price * p.qty, 0);
 
       const data = {
-        fields: { Name: name, Phone: phone, Address: address, Products: productsText, Total: total }
+        Name: name,
+        Phone: phone,
+        Address: address,
+        Products: productsText,
+        Total: total
       };
 
-      const res = await fetch(`https://api.airtable.com/v0/${baseId}/${encodeURIComponent(ordersTable)}`, {
+      const res = await fetch("https://shrill-haze-b867.mironovka6.workers.dev/", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${apiKey}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify(data)
@@ -166,7 +166,7 @@
       const total = cart.reduce((sum, p) => sum + p.price * p.qty, 0);
       const text = `Здравствуйте!%0AХочу сделать заказ:%0A${list}%0AИтого: ${total} тг%0AИмя: ${name}%0AАдрес: ${address}`;
 
-      const phone = 'YOUR_PHONE_NUMBER'; // В формате 7700... без +
+      const phone = 'YOUR_PHONE_NUMBER'; // Пример: 77001234567
       window.open(`https://wa.me/${phone}?text=${text}`, '_blank');
     }
 
