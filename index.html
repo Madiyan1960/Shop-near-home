@@ -4,8 +4,22 @@
   <meta charset="UTF-8" />
   <title>Магазин</title>
   <style>
-    .product { border: 1px solid #ccc; padding: 10px; margin: 10px; }
+    body { font-family: sans-serif; margin: 20px; }
+    #products { display: flex; flex-wrap: wrap; gap: 10px; }
+    .product {
+      flex: 0 0 calc(50% - 10px);
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+    }
+    .product button {
+      margin-top: 5px;
+      padding: 5px 10px;
+    }
     .cart { margin-top: 20px; border-top: 2px solid #000; padding-top: 10px; }
+    .cart-item { margin-bottom: 5px; }
+    #sendBtn { margin-top: 10px; padding: 10px 15px; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -15,21 +29,24 @@
   <h2>Корзина</h2>
   <div id="cart"></div>
   <p><strong>Итого: <span id="total">0</span> тг</strong></p>
+  <button id="sendBtn" onclick="sendOrder()">Оформить заказ</button>
 
   <script>
     const apiKey = 'patH3Tqs7sTMEpo1G.f8d89a927a5f6e352cbe307be7a67e0e297ff32aaabf35e8115af646233845db';
     const baseId = 'appLj0ax0IDVaRTd4';
-    const tableName = 'Товары';
+    const productsTable = 'Товары';
+    const ordersTable = 'Заказы';
 
     const cart = [];
-    const totalSpan = document.getElementById('total');
     const cartDiv = document.getElementById('cart');
+    const totalSpan = document.getElementById('total');
 
     function updateCart() {
       cartDiv.innerHTML = '';
       let total = 0;
       cart.forEach(item => {
         const el = document.createElement('div');
+        el.className = 'cart-item';
         el.textContent = `${item.name} - ${item.price} тг × ${item.qty}`;
         cartDiv.appendChild(el);
         total += item.price * item.qty;
@@ -48,7 +65,7 @@
     }
 
     async function loadProducts() {
-      const res = await fetch(`https://api.airtable.com/v0/${baseId}/${encodeURIComponent(tableName)}`, {
+      const res = await fetch(`https://api.airtable.com/v0/${baseId}/${encodeURIComponent(productsTable)}`, {
         headers: {
           Authorization: `Bearer ${apiKey}`
         }
@@ -70,6 +87,54 @@
         el.appendChild(btn);
         productsDiv.appendChild(el);
       });
+    }
+
+    async function sendOrder() {
+      if (cart.length === 0) {
+        alert('Корзина пуста');
+        return;
+      }
+
+      const name = prompt("Введите имя:");
+      const phone = prompt("Введите номер телефона:");
+      const address = prompt("Введите адрес доставки:");
+
+      if (!name || !phone || !address) {
+        alert("Все поля должны быть заполнены");
+        return;
+      }
+
+      const productsText = cart.map(p => `${p.name} - ${p.price} тг × ${p.qty}`).join(', ');
+      const total = cart.reduce((sum, p) => sum + p.price * p.qty, 0);
+
+      const data = {
+        fields: {
+          Name: name,
+          Phone: phone,
+          Address: address,
+          Products: productsText,
+          Total: total,
+          Status: "Новый"
+        }
+      };
+
+      const res = await fetch(`https://api.airtable.com/v0/${baseId}/${encodeURIComponent(ordersTable)}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+      });
+
+      const result = await res.json();
+      if (result.id) {
+        alert("Заказ успешно отправлен!");
+        cart.length = 0;
+        updateCart();
+      } else {
+        alert("Ошибка при отправке заказа: " + JSON.stringify(result));
+      }
     }
 
     loadProducts();
