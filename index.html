@@ -55,8 +55,7 @@
   </div>
 
   <script>
-    const baseId = 'appLj0ax0IDVaRTd4';
-    const productsTable = 'Товары';
+        const productsTable = 'Заказы';
     const cart = JSON.parse(localStorage.getItem('cart')) || [];
     const cartDiv = document.getElementById('cart');
     const totalSpan = document.getElementById('total');
@@ -89,8 +88,7 @@
     async function loadProducts() {
       const res = await fetch(`https://api.airtable.com/v0/${baseId}/${encodeURIComponent(productsTable)}`, {
         headers: {
-          Authorization: `Bearer patH3Tqs7sTMEpo1G.f8d89a927a5f6e352cbe307be7a67e0e297ff32aaabf35e8115af646233845db`
-        }
+                  }
       });
       const data = await res.json();
       const productsDiv = document.getElementById('products');
