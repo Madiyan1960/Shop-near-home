@@ -55,10 +55,10 @@
   </div>
 
   <script>
-        const productsTable = 'Товары';
     const cart = JSON.parse(localStorage.getItem('cart')) || [];
     const cartDiv = document.getElementById('cart');
     const totalSpan = document.getElementById('total');
+    const workerURL = 'https://shrill-haze-b867.mironovka6.workers.dev/';  // Замените на URL вашего Worker
 
     function updateCart() {
       cartDiv.innerHTML = '';
@@ -86,34 +86,37 @@
     }
 
     async function loadProducts() {
-      const res = await fetch(`https://api.airtable.com/v0/${baseId}/${encodeURIComponent(productsTable)}`, {
-        headers: {
-                  }
-      });
-      const data = await res.json();
-      const productsDiv = document.getElementById('products');
-      data.records.forEach(record => {
-        const product = {
-          id: record.id,
-          name: record.fields.Name,
-          price: record.fields.Price
-        };
-        const el = document.createElement('div');
-        el.className = 'product';
-        el.innerHTML = `
-          <strong>${product.name}</strong><br>
-          Цена: ${product.price} тг<br>
-          <input type="number" value="1" min="1" id="qty-${product.id}"><br>
-        `;
-        const btn = document.createElement('button');
-        btn.textContent = 'Добавить в корзину';
-        btn.onclick = () => {
-          const qty = parseInt(document.getElementById(`qty-${product.id}`).value);
-          addToCart(product, qty);
-        };
-        el.appendChild(btn);
-        productsDiv.appendChild(el);
-      });
+      try {
+        const res = await fetch(`${workerURL}/products`);  // Запрос на Worker для получения товаров
+        const data = await res.json();
+
+        const productsDiv = document.getElementById('products');
+        data.forEach(record => {
+          const product = {
+            id: record.id,
+            name: record.fields.Name,
+            price: record.fields.Price
+          };
+          const el = document.createElement('div');
+          el.className = 'product';
+          el.innerHTML = `
+            <strong>${product.name}</strong><br>
+            Цена: ${product.price} тг<br>
+            <input type="number" value="1" min="1" id="qty-${product.id}"><br>
+          `;
+          const btn = document.createElement('button');
+          btn.textContent = 'Добавить в корзину';
+          btn.onclick = () => {
+            const qty = parseInt(document.getElementById(`qty-${product.id}`).value);
+            addToCart(product, qty);
+          };
+          el.appendChild(btn);
+          productsDiv.appendChild(el);
+        });
+      } catch (error) {
+        alert('Ошибка при загрузке товаров: ' + error.message);
+        console.error(error);
+      }
     }
 
     async function sendOrder() {
@@ -129,14 +132,14 @@
       const total = cart.reduce((sum, p) => sum + p.price * p.qty, 0);
 
       const data = {
-        Name: name,
-        Phone: phone,
-        Address: address,
-        Products: productsText,
-        Total: total
+        name: name,
+        phone: phone,
+        address: address,
+        products: productsText,
+        total: total
       };
 
-      const res = await fetch("https://shrill-haze-b867.mironovka6.workers.dev/", {
+      const res = await fetch(`${workerURL}/orders`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -152,20 +155,6 @@
       } else {
         alert("Ошибка: " + JSON.stringify(result));
       }
-    }
-
-    function sendToWhatsApp() {
-      if (cart.length === 0) return alert('Корзина пуста');
-      const name = prompt("Ваше имя для WhatsApp:");
-      const address = prompt("Адрес доставки:");
-      if (!name || !address) return;
-
-      const list = cart.map(p => `- ${p.name} × ${p.qty} = ${p.price * p.qty} тг`).join('%0A');
-      const total = cart.reduce((sum, p) => sum + p.price * p.qty, 0);
-      const text = `Здравствуйте!%0AХочу сделать заказ:%0A${list}%0AИтого: ${total} тг%0AИмя: ${name}%0AАдрес: ${address}`;
-
-      const phone = 'YOUR_PHONE_NUMBER'; // Пример: 77001234567
-      window.open(`https://wa.me/${phone}?text=${text}`, '_blank');
     }
 
     loadProducts();
