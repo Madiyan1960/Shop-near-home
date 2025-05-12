@@ -20,9 +20,9 @@
       .then(data => {
         const container = document.getElementById('products');
         data.forEach(record => {
-          const name = record.fields['Название'];
-          const price = record.fields['Цена'];
-          const imgUrl = record.fields['Фото']?.[0]?.url;
+          const name = record.fields['Name'];
+          const price = record.fields['Price'];
+          const imgUrl = record.fields['Image']?.[0]?.url;
 
           const div = document.createElement('div');
           div.className = 'product';
