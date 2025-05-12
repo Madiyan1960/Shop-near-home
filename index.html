@@ -1,21 +1,75 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Магазин на Airtable (через Worker)</title>
+  <title>Магазин на Airtable</title>
   <style>
-    .product { border: 1px solid #ccc; padding: 10px; margin: 10px; width: 200px; }
-    img { max-width: 100%; }
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding-bottom: 160px; /* место для корзины */
+    }
+    .product {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin: 10px;
+      width: 200px;
+      display: inline-block;
+      vertical-align: top;
+    }
+    img {
+      max-width: 100%;
+    }
+    #cart {
+      position: fixed;
+      right: 10px;
+      bottom: 10px;
+      width: 300px;
+      max-height: 300px;
+      overflow-y: auto;
+      background: #f8f8f8;
+      border: 1px solid #aaa;
+      padding: 10px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.2);
+      border-radius: 8px;
+    }
+    #cart h3 {
+      margin-top: 0;
+    }
+    #cart ul {
+      padding-left: 20px;
+    }
   </style>
 </head>
 <body>
   <h1>Товары</h1>
   <div id="products"></div>
 
-  <script>
-    const WORKER_URL = 'https://shrill-haze-b867.mironovka6.workers.dev/products'; // замените на свой адрес
+  <div id="cart">
+    <h3>Корзина</h3>
+    <ul id="cartItems"></ul>
+    <strong>Итого: <span id="total">0</span> тг</strong>
+  </div>
 
-    fetch(WORKER_URL)
+  <script>
+    const API_URL = 'https://shrill-haze-b867.mironovka6.workers.dev/products'; // замените на ваш Worker URL
+
+    const cart = [];
+
+    function updateCart() {
+      const cartItems = document.getElementById('cartItems');
+      cartItems.innerHTML = '';
+      let total = 0;
+      cart.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = `${item.name} — ${item.price} тг`;
+        cartItems.appendChild(li);
+        total += item.price;
+      });
+      document.getElementById('total').textContent = total;
+    }
+
+    fetch(API_URL)
       .then(res => res.json())
       .then(data => {
         const container = document.getElementById('products');
@@ -30,13 +84,20 @@
             <h3>${name}</h3>
             <p>Цена: ${price} тг</p>
             ${imgUrl ? `<img src="${imgUrl}">` : ''}
+            <button>Добавить в корзину</button>
           `;
+
+          div.querySelector('button').addEventListener('click', () => {
+            cart.push({ name, price });
+            updateCart();
+          });
+
           container.appendChild(div);
         });
       })
       .catch(err => {
-        console.error('Ошибка:', err);
-        document.getElementById('products').innerText = 'Ошибка загрузки товаров';
+        document.getElementById('products').textContent = 'Ошибка загрузки товаров';
+        console.error(err);
       });
   </script>
 </body>
