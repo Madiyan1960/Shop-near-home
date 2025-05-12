@@ -1,0 +1,7 @@
+name = "airtable-worker"
+main = "worker.js"
+compatibility_date = "2024-05-12"
+
+[vars]
+AIRTABLE_API_KEY = "patH3Tqs7sTMEpo1G.f8d89a927a5f6e352cbe307be7a67e0e297ff32aaabf35e8115af646233845db"
+AIRTABLE_BASE_ID = "appLj0ax0IDVaRTd4"
