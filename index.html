@@ -76,7 +76,7 @@
         const container = document.getElementById('products');
         data.forEach(record => {
           const fields = record.fields;
-          const name = fields['Name'];
+          const name = fields['Products'];
           const price = fields['Price'];
           const imgUrl = fields['Image']?.[0]?.url;
 
@@ -113,7 +113,7 @@
           Name: Name,
           Phone: Phone,
           Address: Address,
-          Products: products,P
+          Products: Products,
           Total: Total
         })
       })
