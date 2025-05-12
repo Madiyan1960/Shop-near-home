@@ -106,7 +106,7 @@
       const products = cart.map(item => item.name).join(', ');
       const total = cart.reduce((sum, item) => sum + item.price, 0);
 
-      fetch('https://shrill-haze-b867.mironovka6.workers.dev//order', {
+      fetch('https://shrill-haze-b867.mironovka6.workers.dev/order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
