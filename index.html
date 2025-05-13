@@ -3,204 +3,118 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#ffffff" />
   <title>Магазин</title>
-  <link rel="manifest" href="manifest.json" />
   <style>
     body {
       font-family: sans-serif;
       margin: 0;
       padding: 0;
-      display: flex;
-      flex-direction: row;
     }
-    #cart {
-      width: 250px;
-      background: #f3f3f3;
+    header, #cart, #products {
       padding: 15px;
-      border-right: 1px solid #ccc;
-      height: 100vh;
-      overflow-y: auto;
-      position: fixed;
-      left: 0;
-      top: 0;
-    }
-    #main {
-      margin-left: 260px;
-      padding: 20px;
-      flex: 1;
     }
     .product {
-      border: 1px solid #ccc;
+      border: 1px solid #ddd;
       padding: 10px;
-      margin: 10px;
-      width: 200px;
-      display: inline-block;
-      vertical-align: top;
-      position: relative;
+      margin: 10px 0;
     }
-    img {
+    .product img {
       max-width: 100%;
+      height: auto;
     }
-    .form {
-      margin-top: 10px;
+    #cart {
+      background: #f9f9f9;
+      border-top: 1px solid #ccc;
     }
-    input, textarea {
+    input, textarea, button {
       width: 100%;
-      margin-bottom: 8px;
-      padding: 6px;
-    }
-    button {
-      padding: 6px 12px;
-    }
-    #toast {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: #4caf50;
-      color: white;
-      padding: 10px 15px;
-      border-radius: 5px;
-      display: none;
-      z-index: 999;
-    }
-    @media (max-width: 600px) {
-      body {
-        flex-direction: column;
-      }
-      #cart {
-        width: 100%;
-        height: auto;
-        position: static;
-        border-right: none;
-        border-bottom: 1px solid #ccc;
-      }
-      #main {
-        margin-left: 0;
-      }
-    }
-    @keyframes fly {
-      0% { transform: scale(1); opacity: 1; }
-      100% { transform: translateX(-200px) translateY(-300px) scale(0.1); opacity: 0; }
-    }
-    .fly-img {
-      position: absolute;
-      width: 100px;
-      z-index: 9999;
-      animation: fly 0.7s ease-out forwards;
-      pointer-events: none;
+      margin-top: 8px;
+      padding: 8px;
+      box-sizing: border-box;
     }
   </style>
 </head>
 <body>
-  <div id="cart">
-    <h3>🛒 Корзина (<span id="cart-count">0</span>)</h3>
-    <ul id="cart-items"></ul>
+
+  <header>
+    <h1>🛒 Магазин</h1>
+  </header>
+
+  <section id="products">Загрузка товаров...</section>
+
+  <section id="cart">
+    <h2>Корзина (<span id="count">0</span>)</h2>
+    <ul id="items"></ul>
     <p><strong>Итого: <span id="total">0</span> тг</strong></p>
-    <div class="form">
-      <input type="text" id="name" placeholder="Имя" />
-      <input type="text" id="phone" placeholder="Телефон (WhatsApp)" />
-      <textarea id="address" placeholder="Адрес доставки"></textarea>
-      <button onclick="submitOrder()">Заказать</button>
-    </div>
+    <input type="text" id="name" placeholder="Имя" />
+    <input type="text" id="phone" placeholder="Телефон" />
+    <textarea id="address" placeholder="Адрес"></textarea>
+    <button onclick="submitOrder()">Оформить заказ</button>
     <p id="status"></p>
-  </div>
-
-  <div id="main">
-    <h1>Товары</h1>
-    <div id="products">Загрузка товаров...</div>
-  </div>
-
-  <div id="toast">Добавлено в корзину!</div>
+  </section>
 
   <script>
-    const cart = [];
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
 
-    function renderCart() {
-      const cartList = document.getElementById('cart-items');
-      cartList.innerHTML = '';
-      let total = 0;
-      cart.forEach((item, index) => {
-        const li = document.createElement('li');
-        li.innerHTML = `${item.name} — ${item.price} тг 
-          <button onclick="removeFromCart(${index})">❌</button>`;
-        cartList.appendChild(li);
-        total += item.price;
-      });
-      document.getElementById('total').textContent = total;
-      document.getElementById('cart-count').textContent = cart.length;
-    }
-
-    function removeFromCart(index) {
-      cart.splice(index, 1);
+    function saveCart() {
       localStorage.setItem('cart', JSON.stringify(cart));
       renderCart();
+    }
+
+    function renderCart() {
+      const list = document.getElementById('items');
+      const total = document.getElementById('total');
+      const count = document.getElementById('count');
+      list.innerHTML = '';
+      let sum = 0;
+      cart.forEach((item, i) => {
+        const li = document.createElement('li');
+        li.textContent = `${item.name} — ${item.price} тг`;
+        const btn = document.createElement('button');
+        btn.textContent = 'Удалить';
+        btn.onclick = () => { cart.splice(i, 1); saveCart(); };
+        li.appendChild(btn);
+        list.appendChild(li);
+        sum += item.price;
+      });
+      total.textContent = sum;
+      count.textContent = cart.length;
     }
 
     function addToCart(product) {
       cart.push(product);
-      localStorage.setItem('cart', JSON.stringify(cart));
-      renderCart();
-      showToast();
-    }
-
-    function showToast(message = 'Добавлено в корзину!') {
-      const toast = document.getElementById('toast');
-      toast.textContent = message;
-      toast.style.display = 'block';
-      setTimeout(() => (toast.style.display = 'none'), 2000);
-    }
-
-    function flyToCart(button, imgUrl) {
-      const img = document.createElement('img');
-      img.src = imgUrl;
-      img.className = 'fly-img';
-
-      const rect = button.getBoundingClientRect();
-      img.style.left = rect.left + 'px';
-      img.style.top = rect.top + 'px';
-      img.style.position = 'fixed';
-
-      document.body.appendChild(img);
-      setTimeout(() => img.remove(), 700);
+      saveCart();
     }
 
     fetch('https://shrill-haze-b867.mironovka6.workers.dev/products')
-      .then(res => {
-        if (!res.ok) throw new Error(`Ошибка HTTP: ${res.status}`);
-        return res.json();
-      })
+      .then(r => r.ok ? r.json() : Promise.reject('Ошибка загрузки'))
       .then(data => {
-        console.log('Товары загружены:', data);
-        const container = document.getElementById('products');
-        container.innerHTML = '';
-
-        if (!Array.isArray(data) || data.length === 0) {
-          container.innerHTML = '<p>Нет доступных товаров.</p>';
+        const box = document.getElementById('products');
+        box.innerHTML = '';
+        if (!Array.isArray(data)) {
+          box.textContent = 'Нет данных.';
           return;
         }
-
-        data.forEach(record => {
-          const fields = record.fields || {};
-          const name = fields['Products'] || 'Без названия';
-          const price = fields['Price'] || 0;
-          const imageArray = fields['Image'];
-          const imgUrl = imageArray && imageArray[0] && imageArray[0].url;
+        data.forEach(item => {
+          const f = item.fields || {};
+          const name = f.Products || 'Без названия';
+          const price = f.Price || 0;
+          const img = f.Image?.[0]?.url || '';
 
           const div = document.createElement('div');
           div.className = 'product';
           div.innerHTML = `
             <h3>${name}</h3>
             <p>Цена: ${price} тг</p>
-            ${imgUrl ? `<img src="${imgUrl}" class="product-img">` : ''}
-            <button onclick='flyToCart(this, "${imgUrl || ""}"); addToCart({name: "${name}", price: ${price}})'>В корзину</button>
+            ${img ? `<img src="${img}" alt="${name}" />` : ''}
+            <button>Добавить</button>
           `;
-          container.appendChild(div);
+          div.querySelector('button').onclick = () => addToCart({ name, price });
+          box.appendChild(div);
         });
       })
-      .catch(err => {
-        console.error('Ошибка загрузки товаров:', err);
-        document.getElementById('products').innerHTML = '<p>Ошибка загрузки товаров. Проверьте соединение.</p>';
+      .catch(() => {
+        document.getElementById('products').innerHTML = '<p>Ошибка загрузки товаров.</p>';
       });
 
     function submitOrder() {
@@ -210,66 +124,33 @@
       const status = document.getElementById('status');
 
       if (!name || !phone || !address || cart.length === 0) {
-        status.textContent = 'Пожалуйста, заполните все поля и добавьте товары в корзину.';
+        status.textContent = 'Заполните все поля и добавьте товары.';
         return;
       }
 
-      const products = cart.map(item => item.name).join(', ');
-      const total = cart.reduce((sum, item) => sum + item.price, 0);
+      const products = cart.map(i => i.name).join(', ');
+      const total = cart.reduce((s, i) => s + i.price, 0);
 
       fetch('https://shrill-haze-b867.mironovka6.workers.dev/order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          Name: name,
-          Phone: phone,
-          Address: address,
-          Products: products,
-          Total: total
-        })
+        body: JSON.stringify({ Name: name, Phone: phone, Address: address, Products: products, Total: total })
       })
-        .then(res => res.json())
-        .then(result => {
-          status.textContent = 'Заказ отправлен!';
-          cart.length = 0;
-          localStorage.removeItem('cart');
-          renderCart();
-          document.getElementById('name').value = '';
-          document.getElementById('phone').value = '';
-          document.getElementById('address').value = '';
-
-          const waText = `Заказ:\nИмя: ${name}\nТел: ${phone}\nАдрес: ${address}\nТовары: ${products}\nИтого: ${total} тг`;
-          const waUrl = `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(waText)}`;
-          window.open(waUrl, '_blank');
-        })
-        .catch(err => {
-          status.textContent = 'Ошибка при отправке заказа.';
-          console.error(err);
-        });
-    }
-
-    window.onload = () => {
-      const savedCart = localStorage.getItem('cart');
-      if (savedCart) {
-        const parsedCart = JSON.parse(savedCart);
-        parsedCart.forEach(item => cart.push(item));
-        renderCart();
-      }
-
-      ['name', 'phone', 'address'].forEach(id => {
-        const saved = localStorage.getItem(id);
-        if (saved) document.getElementById(id).value = saved;
-        document.getElementById(id).addEventListener('input', e => {
-          localStorage.setItem(id, e.target.value);
-        });
+      .then(r => r.json())
+      .then(() => {
+        status.textContent = 'Заказ отправлен!';
+        cart.length = 0;
+        saveCart();
+        document.getElementById('name').value = '';
+        document.getElementById('phone').value = '';
+        document.getElementById('address').value = '';
+      })
+      .catch(() => {
+        status.textContent = 'Ошибка при отправке заказа.';
       });
-    };
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js')
-        .then(() => console.log('Service Worker зарегистрирован'))
-        .catch(err => console.error('Service Worker ошибка:', err));
     }
+
+    renderCart();
   </script>
 </body>
 </html>
