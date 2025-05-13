@@ -117,7 +117,7 @@
             document.getElementById('order-form').style.display = 'block';
         }
 
-        // Отправка заказа
+        // Отправка заказа в Airtable
         function submitOrder(event) {
             event.preventDefault();
 
@@ -127,26 +127,40 @@
 
             // Формируем заказ
             const order = {
-                name,
-                phone,
-                address,
-                products: cart.map(item => `${item.name} (${item.quantity} x ${item.price} тг)`).join(", "),
-                total: cart.reduce((total, item) => total + (item.price * item.quantity), 0)
+                fields: {
+                    Name: name,
+                    Phone: phone,
+                    Address: address,
+                    Products: cart.map(item => `${item.name} (${item.quantity} x ${item.price} тг)`).join(", "),
+                    Total: cart.reduce((total, item) => total + (item.price * item.quantity), 0)
+                }
             };
 
-            // Здесь вы можете отправить заказ на сервер или обработать его по-другому
-            console.log("Заказ:", order);
+            // Отправка данных в Airtable
+            fetch('https://api.airtable.com/v0/YOUR_BASE_ID/Orders', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer YOUR_API_KEY',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(order)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Данные успешно отправлены в Airtable:", data);
+                alert("Ваш заказ успешно отправлен!");
 
-            // Показать подтверждение
-            alert("Ваш заказ успешно отправлен!");
+                // Очистка корзины
+                localStorage.removeItem('cart');
+                cart = [];
+                updateCart();
 
-            // Очистка корзины
-            localStorage.removeItem('cart');
-            cart = [];
-            updateCart();
-
-            // Скрытие формы
-            document.getElementById('order-form').style.display = 'none';
+                // Скрытие формы
+                document.getElementById('order-form').style.display = 'none';
+            })
+            .catch(err => {
+                console.error("Ошибка при отправке данных в Airtable:", err);
+            });
         }
 
         // Загружаем товары при старте
