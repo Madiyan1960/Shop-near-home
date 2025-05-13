@@ -50,6 +50,7 @@
       gap: 10px;
       width: 100%;
       justify-items: center; /* Центрируем товары */
+      box-sizing: border-box;
     }
 
     .product {
@@ -85,7 +86,7 @@
       }
 
       .product {
-        width: 45%; /* Делим на 2 колонки на мобильных */
+        width: 100%; /* Товары занимают всю ширину на мобильных */
         margin: 5px;
       }
 
@@ -93,6 +94,11 @@
         bottom: 15px;
         right: 15px;
         font-size: 20px;
+      }
+
+      /* Убираем колонок 2 на мобильных, товары в 1 колонку */
+      #products {
+        grid-template-columns: 1fr !important; /* Принудительно одна колонка на мобильных */
       }
     }
 
