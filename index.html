@@ -12,13 +12,14 @@
       padding: 0;
       display: flex;
       flex-direction: row;
+      min-height: 100vh;
     }
     #cart {
       width: 250px;
       background: #f3f3f3;
       padding: 15px;
       border-right: 1px solid #ccc;
-      height: 100vh;
+      height: 100%;
       overflow-y: auto;
       position: fixed;
       left: 0;
@@ -28,6 +29,7 @@
       margin-left: 260px;
       padding: 20px;
       flex: 1;
+      overflow-y: auto;
     }
     .product {
       border: 1px solid #ccc;
@@ -77,6 +79,9 @@
       #main {
         margin-left: 0;
       }
+      .product {
+        width: 100%;
+      }
     }
     @keyframes fly {
       0% { transform: scale(1); opacity: 1; }
@@ -115,44 +120,34 @@
   <script>
     const cart = [];
 
-    // Функция добавления товара в корзину с количеством
-    function addToCart(product) {
-      const existingProduct = cart.find(item => item.name === product.name);
-      if (existingProduct) {
-        existingProduct.quantity += 1; // Увеличиваем количество, если товар уже есть
-      } else {
-        product.quantity = 1; // Устанавливаем количество товара как 1
-        cart.push(product);
-      }
-      localStorage.setItem('cart', JSON.stringify(cart));
-      renderCart();
-      showToast();
-    }
-
-    // Функция отображения корзины
     function renderCart() {
       const cartList = document.getElementById('cart-items');
       cartList.innerHTML = '';
       let total = 0;
       cart.forEach((item, index) => {
         const li = document.createElement('li');
-        li.innerHTML = `${item.name} — ${item.quantity} x ${item.price} тг 
+        li.innerHTML = `${item.name} — ${item.price} тг 
           <button onclick="removeFromCart(${index})">❌</button>`;
         cartList.appendChild(li);
-        total += item.price * item.quantity;
+        total += item.price;
       });
       document.getElementById('total').textContent = total;
       document.getElementById('cart-count').textContent = cart.length;
     }
 
-    // Функция удаления товара из корзины
     function removeFromCart(index) {
       cart.splice(index, 1);
       localStorage.setItem('cart', JSON.stringify(cart));
       renderCart();
     }
 
-    // Функция отображения всплывающего сообщения
+    function addToCart(product) {
+      cart.push(product);
+      localStorage.setItem('cart', JSON.stringify(cart));
+      renderCart();
+      showToast();
+    }
+
     function showToast(message = 'Добавлено в корзину!') {
       const toast = document.getElementById('toast');
       toast.textContent = message;
@@ -160,7 +155,6 @@
       setTimeout(() => (toast.style.display = 'none'), 2000);
     }
 
-    // Функция анимации добавления товара в корзину
     function flyToCart(button, imgUrl) {
       const img = document.createElement('img');
       img.src = imgUrl;
@@ -175,30 +169,42 @@
       setTimeout(() => img.remove(), 700);
     }
 
-    // Загрузка товаров с Airtable
     fetch('https://shrill-haze-b867.mironovka6.workers.dev/products')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Не удалось загрузить товары');
+        }
+        return res.json();
+      })
       .then(data => {
         const container = document.getElementById('products');
-        data.forEach(record => {
-          const fields = record.fields;
-          const name = fields['Products'];
-          const price = fields['Price'];
-          const imgUrl = fields['Image']?.[0]?.url;
+        if (data && data.length > 0) {
+          data.forEach(record => {
+            const fields = record.fields;
+            const name = fields['Products'];
+            const price = fields['Price'];
+            const imgUrl = fields['Image']?.[0]?.url;
 
-          const div = document.createElement('div');
-          div.className = 'product';
-          div.innerHTML = `
-            <h3>${name}</h3>
-            <p>Цена: ${price} тг</p>
-            ${imgUrl ? `<img src="${imgUrl}" class="product-img">` : ''}
-            <button onclick='flyToCart(this, "${imgUrl}"); addToCart({name: "${name}", price: ${price}})'>В корзину</button>
-          `;
-          container.appendChild(div);
-        });
+            const div = document.createElement('div');
+            div.className = 'product';
+            div.innerHTML = `
+              <h3>${name}</h3>
+              <p>Цена: ${price} тг</p>
+              ${imgUrl ? `<img src="${imgUrl}" class="product-img">` : ''}
+              <button onclick='flyToCart(this, "${imgUrl}"); addToCart({name: "${name}", price: ${price}})'>В корзину</button>
+            `;
+            container.appendChild(div);
+          });
+        } else {
+          container.innerHTML = '<p>Нет доступных товаров.</p>';
+        }
+      })
+      .catch(err => {
+        console.error('Ошибка при получении данных:', err);
+        const container = document.getElementById('products');
+        container.innerHTML = '<p>Не удалось загрузить товары. Попробуйте позже.</p>';
       });
 
-    // Функция отправки заказа
     function submitOrder() {
       const name = document.getElementById('name').value.trim();
       const phone = document.getElementById('phone').value.trim();
@@ -210,9 +216,8 @@
         return;
       }
 
-      // Формируем строку с подробностями товаров (название, количество, цена)
-      const products = cart.map(item => `${item.name} (${item.quantity} шт. по ${item.price} тг)`).join(', ');
-      const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      const products = cart.map(item => `${item.name} x${item.quantity || 1} (${item.price} тг)`).join(', ');
+      const total = cart.reduce((sum, item) => sum + item.price, 0);
 
       fetch('https://shrill-haze-b867.mironovka6.workers.dev/order', {
         method: 'POST',
@@ -221,7 +226,7 @@
           Name: name,
           Phone: phone,
           Address: address,
-          Products: products, // Подробности товаров
+          Products: products,
           Total: total
         })
       })
@@ -245,7 +250,6 @@
         });
     }
 
-    // Загружаем корзину из localStorage при загрузке страницы
     window.onload = () => {
       const savedCart = localStorage.getItem('cart');
       if (savedCart) {
@@ -263,7 +267,6 @@
       });
     };
 
-    // Регистрация Service Worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('service-worker.js')
         .then(() => console.log('Service Worker зарегистрирован'));
