@@ -153,14 +153,18 @@
 
     function loadProducts() {
       fetch('https://shrill-haze-b867.mironovka6.workers.dev/products')
-        .then(res => res.json())
+        .then(res => {
+          console.log("Запрос выполнен, статус:", res.status);
+          return res.json();
+        })
         .then(data => {
-          console.log("Data loaded:", data);  // Отладка: проверка, загружаются ли данные
-          const container = document.getElementById('products');
           if (data.length === 0) {
             console.error("Нет данных о товарах");
             return;
           }
+
+          const container = document.getElementById('products');
+          console.log("Загружены товары:", data);
 
           data.forEach(record => {
             const fields = record.fields;
