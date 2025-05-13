@@ -1,99 +1,257 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Магазин</title>
+  <link rel="manifest" href="manifest.json" />
   <style>
-    body { font-family: sans-serif; padding: 20px; }
-    .product { margin-bottom: 10px; }
-    .cart { margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px; }
-    .cart-item { margin-bottom: 5px; }
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: row;
+    }
+    #cart {
+      width: 250px;
+      background: #f3f3f3;
+      padding: 15px;
+      border-right: 1px solid #ccc;
+      height: 100vh;
+      overflow-y: auto;
+      position: fixed;
+      left: 0;
+      top: 0;
+    }
+    #main {
+      margin-left: 260px;
+      padding: 20px;
+      flex: 1;
+    }
+    .product {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin: 10px;
+      width: 200px;
+      display: inline-block;
+      vertical-align: top;
+      position: relative;
+    }
+    img {
+      max-width: 100%;
+    }
+    .form {
+      margin-top: 10px;
+    }
+    input, textarea {
+      width: 100%;
+      margin-bottom: 8px;
+      padding: 6px;
+    }
+    button {
+      padding: 6px 12px;
+    }
+    #toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #4caf50;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 5px;
+      display: none;
+      z-index: 999;
+    }
+    @media (max-width: 600px) {
+      body {
+        flex-direction: column;
+      }
+      #cart {
+        width: 100%;
+        height: auto;
+        position: static;
+        border-right: none;
+        border-bottom: 1px solid #ccc;
+      }
+      #main {
+        margin-left: 0;
+      }
+    }
+    @keyframes fly {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: translateX(-200px) translateY(-300px) scale(0.1); opacity: 0; }
+    }
+    .fly-img {
+      position: absolute;
+      width: 100px;
+      z-index: 9999;
+      animation: fly 0.7s ease-out forwards;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
-  <h1>Магазин</h1>
-
-  <!-- Товары -->
-  <div class="product">
-    <strong>Творог российский Саратовский полезный</strong> — 390 тг
-    <button onclick="addToCart('Творог российский Саратовский полезный', 390)">Добавить</button>
+  <div id="cart">
+    <h3>🛒 Корзина (<span id="cart-count">0</span>)</h3>
+    <ul id="cart-items"></ul>
+    <p><strong>Итого: <span id="total">0</span> тг</strong></p>
+    <div class="form">
+      <input type="text" id="name" placeholder="Имя" />
+      <input type="text" id="phone" placeholder="Телефон (WhatsApp)" />
+      <textarea id="address" placeholder="Адрес доставки"></textarea>
+      <button onclick="submitOrder()">Заказать</button>
+    </div>
+    <p id="status"></p>
   </div>
-  <div class="product">
-    <strong>Молоко Астана 3.2%</strong> — 450 тг
-    <button onclick="addToCart('Молоко Астана 3.2%', 450)">Добавить</button>
+
+  <div id="main">
+    <h1>Товары</h1>
+    <div id="products"></div>
   </div>
 
-  <!-- Данные покупателя -->
-  <h3>Ваши данные</h3>
-  <input id="name" placeholder="Имя"><br><br>
-  <input id="phone" placeholder="Телефон"><br><br>
-  <input id="address" placeholder="Адрес"><br><br>
-
-  <!-- Корзина -->
-  <div class="cart" id="cart"></div>
-
-  <!-- Кнопка отправки -->
-  <button onclick="sendOrder()">Отправить в WhatsApp</button>
+  <div id="toast">Добавлено в корзину!</div>
 
   <script>
-    let cart = JSON.parse(localStorage.getItem('cart')) || [];
-
-    function saveCart() {
-      localStorage.setItem('cart', JSON.stringify(cart));
-    }
+    const cart = [];
 
     function renderCart() {
-      const cartDiv = document.getElementById('cart');
-      cartDiv.innerHTML = '<h3>Корзина</h3>';
-      if (cart.length === 0) {
-        cartDiv.innerHTML += '<p>Корзина пуста</p>';
-        return;
-      }
-
+      const cartList = document.getElementById('cart-items');
+      cartList.innerHTML = '';
       let total = 0;
-      cart.forEach(item => {
-        total += item.price * item.quantity;
-        cartDiv.innerHTML += `<div class="cart-item">${item.name} — ${item.price} тг x${item.quantity}</div>`;
+      cart.forEach((item, index) => {
+        const li = document.createElement('li');
+        li.innerHTML = `${item.name} — ${item.price} тг 
+          <button onclick="removeFromCart(${index})">❌</button>`;
+        cartList.appendChild(li);
+        total += item.price;
       });
-
-      cartDiv.innerHTML += `<strong>Итого: ${total} тг</strong>`;
+      document.getElementById('total').textContent = total;
+      document.getElementById('cart-count').textContent = cart.length;
     }
 
-    function addToCart(name, price) {
-      const existing = cart.find(item => item.name === name);
-      if (existing) {
-        existing.quantity += 1;
-      } else {
-        cart.push({ name, price, quantity: 1 });
-      }
-      saveCart();
+    function removeFromCart(index) {
+      cart.splice(index, 1);
+      localStorage.setItem('cart', JSON.stringify(cart));
       renderCart();
     }
 
-    function sendOrder() {
-      const name = document.getElementById('name').value;
-      const phone = document.getElementById('phone').value;
-      const address = document.getElementById('address').value;
+    function addToCart(product) {
+      cart.push(product);
+      localStorage.setItem('cart', JSON.stringify(cart));
+      renderCart();
+      showToast();
+    }
 
-      localStorage.setItem('customerName', name);
-      localStorage.setItem('customerPhone', phone);
-      localStorage.setItem('customerAddress', address);
+    function showToast(message = 'Добавлено в корзину!') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.style.display = 'block';
+      setTimeout(() => (toast.style.display = 'none'), 2000);
+    }
 
-      if (cart.length === 0) {
-        alert("Корзина пуста!");
+    function flyToCart(button, imgUrl) {
+      const img = document.createElement('img');
+      img.src = imgUrl;
+      img.className = 'fly-img';
+
+      const rect = button.getBoundingClientRect();
+      img.style.left = rect.left + 'px';
+      img.style.top = rect.top + 'px';
+      img.style.position = 'fixed';
+
+      document.body.appendChild(img);
+      setTimeout(() => img.remove(), 700);
+    }
+
+    fetch('https://shrill-haze-b867.mironovka6.workers.dev/products')
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById('products');
+        data.forEach(record => {
+          const fields = record.fields;
+          const name = fields['Products'];
+          const price = fields['Price'];
+          const imgUrl = fields['Image']?.[0]?.url;
+
+          const div = document.createElement('div');
+          div.className = 'product';
+          div.innerHTML = `
+            <h3>${name}</h3>
+            <p>Цена: ${price} тг</p>
+            ${imgUrl ? `<img src="${imgUrl}" class="product-img">` : ''}
+            <button onclick='flyToCart(this, "${imgUrl}"); addToCart({name: "${name}", price: ${price}})'>В корзину</button>
+          `;
+          container.appendChild(div);
+        });
+      });
+
+    function submitOrder() {
+      const name = document.getElementById('name').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const address = document.getElementById('address').value.trim();
+      const status = document.getElementById('status');
+
+      if (!name || !phone || !address || cart.length === 0) {
+        status.textContent = 'Пожалуйста, заполните все поля и добавьте товары в корзину.';
         return;
       }
 
-      const orderItems = cart.map(item => `${item.name} — ${item.price} тг x${item.quantity}`).join('\n');
-      const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-      const orderText = `🛒 Новый заказ:\n\n${orderItems}\n\n📦 Общая сумма: ${total} тг\n\n👤 Имя: ${name}\n📞 Телефон: ${phone}\n🏠 Адрес: ${address}`;
+      const products = cart.map(item => item.name).join(', ');
+      const total = cart.reduce((sum, item) => sum + item.price, 0);
 
-      const url = `https://wa.me/?text=${encodeURIComponent(orderText)}`;
-      window.open(url, '_blank');
+      fetch('https://shrill-haze-b867.mironovka6.workers.dev/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          Name: name,
+          Phone: phone,
+          Address: address,
+          Products: products,
+          Total: total
+        })
+      })
+        .then(res => res.json())
+        .then(result => {
+          status.textContent = 'Заказ отправлен!';
+          cart.length = 0;
+          localStorage.removeItem('cart');
+          renderCart();
+          document.getElementById('name').value = '';
+          document.getElementById('phone').value = '';
+          document.getElementById('address').value = '';
+
+          const waText = `Заказ:\nИмя: ${name}\nТел: ${phone}\nАдрес: ${address}\nТовары: ${products}\nИтого: ${total} тг`;
+          const waUrl = `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(waText)}`;
+          window.open(waUrl, '_blank');
+        })
+        .catch(err => {
+          status.textContent = 'Ошибка при отправке заказа.';
+          console.error(err);
+        });
     }
 
-    // При загрузке
-    renderCart();
+    window.onload = () => {
+      const savedCart = localStorage.getItem('cart');
+      if (savedCart) {
+        const parsedCart = JSON.parse(savedCart);
+        parsedCart.forEach(item => cart.push(item));
+        renderCart();
+      }
+
+      ['name', 'phone', 'address'].forEach(id => {
+        const saved = localStorage.getItem(id);
+        if (saved) document.getElementById(id).value = saved;
+        document.getElementById(id).addEventListener('input', e => {
+          localStorage.setItem(id, e.target.value);
+        });
+      });
+    };
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log('Service Worker зарегистрирован'));
+    }
   </script>
 </body>
 </html>
