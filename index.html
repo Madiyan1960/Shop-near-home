@@ -74,9 +74,16 @@
     // Загрузка сохранённых данных формы
     window.onload = () => {
       document.getElementById('name').value = localStorage.getItem('name') || '';
-      document.getElementById('phone').value = localStorage.getItem('phone') || '';
+      document.getElementById('phone').value = localStorage.getItem('phone') || '+7';
       document.getElementById('address').value = localStorage.getItem('address') || '';
     };
+
+    // Автоматическое добавление +7 при фокусе на поле телефона
+    document.getElementById('phone').addEventListener('focus', (event) => {
+      if (event.target.value === '') {
+        event.target.value = '+7';
+      }
+    });
 
     function renderCart() {
       const cartList = document.getElementById('cart-items');
