@@ -55,21 +55,132 @@
     .product button:hover {
       background-color: #45a049;
     }
+
+    #cart {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #ff9800;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 50px;
+      cursor: pointer;
+      font-size: 16px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    #cart:hover {
+      background-color: #ff5722;
+    }
+
+    #cart-count {
+      font-weight: bold;
+    }
+
+    #cart-items {
+      display: none;
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      background-color: white;
+      border-top-left-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 15px;
+      max-height: 80vh;
+      overflow-y: auto;
+      width: 300px;
+    }
+
+    #cart-items ul {
+      padding: 0;
+      list-style-type: none;
+    }
+
+    #cart-items ul li {
+      padding: 10px 0;
+      border-bottom: 1px solid #ddd;
+    }
+
+    #cart-items button {
+      background-color: red;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    #cart-items button:hover {
+      background-color: darkred;
+    }
   </style>
 </head>
 <body>
 
   <div id="products"></div>
+  <div id="cart">Корзина <span id="cart-count">0</span></div>
+  <div id="cart-items">
+    <h3>Товары в корзине</h3>
+    <ul id="cart-list"></ul>
+  </div>
 
   <script>
+    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+    // Обновить количество товаров в корзине
+    function updateCartCount() {
+      document.getElementById('cart-count').textContent = cart.length;
+    }
+
+    // Показать или скрыть корзину
+    function toggleCart() {
+      const cartItems = document.getElementById('cart-items');
+      if (cartItems.style.display === 'block') {
+        cartItems.style.display = 'none';
+      } else {
+        cartItems.style.display = 'block';
+      }
+    }
+
+    // Добавить товар в корзину
+    function addToCart(product) {
+      cart.push(product);
+      localStorage.setItem('cart', JSON.stringify(cart));
+      updateCartCount();
+      renderCartItems();
+      alert(`Товар "${product.name}" добавлен в корзину!`);
+    }
+
+    // Отобразить товары в корзине
+    function renderCartItems() {
+      const cartList = document.getElementById('cart-list');
+      cartList.innerHTML = ''; // Очистить список
+
+      cart.forEach((product, index) => {
+        const li = document.createElement('li');
+        li.innerHTML = `${product.name} - ${product.price} тг <button onclick="removeFromCart(${index})">Удалить</button>`;
+        cartList.appendChild(li);
+      });
+    }
+
+    // Удалить товар из корзины
+    function removeFromCart(index) {
+      cart.splice(index, 1);
+      localStorage.setItem('cart', JSON.stringify(cart));
+      updateCartCount();
+      renderCartItems();
+    }
+
+    // Загружаем товары
     function loadProducts() {
       fetch('https://shrill-haze-b867.mironovka6.workers.dev/products')
         .then(res => {
-          console.log("Запрос выполнен, статус:", res.status); // Выводим статус ответа
+          console.log("Запрос выполнен, статус:", res.status);
           return res.json();
         })
         .then(data => {
-          console.log("Загружены товары:", data); // Проверим, что данные приходят
+          console.log("Загружены товары:", data);
           if (data.length === 0) {
             console.error("Нет данных о товарах");
             return;
@@ -84,13 +195,11 @@
 
             const div = document.createElement('div');
             div.className = 'product';
-            
-            // Формируем HTML для товара
             div.innerHTML = `
               <h3>${name}</h3>
               <p>Цена: ${price} тг</p>
               ${imgUrl ? `<img src="${imgUrl}" alt="${name}" />` : ''}
-              <button onclick="addToCart({name: '${name}', price: ${price}}, this)">В корзину</button>
+              <button onclick="addToCart({name: '${name}', price: ${price}})">В корзину</button>
             `;
             
             container.appendChild(div);
@@ -101,15 +210,12 @@
         });
     }
 
-    function addToCart(product, button) {
-      console.log("Добавлен товар:", product);
-
-      // Логика добавления товара в корзину (можно использовать localStorage или другие подходы)
-      alert(`Товар "${product.name}" добавлен в корзину!`);
-    }
-
-    // Загружаем товары при загрузке страницы
-    window.onload = loadProducts;
+    // При загрузке страницы
+    window.onload = () => {
+      loadProducts();
+      updateCartCount();
+      document.getElementById('cart').addEventListener('click', toggleCart);
+    };
   </script>
 
 </body>
