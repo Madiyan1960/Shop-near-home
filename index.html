@@ -11,6 +11,9 @@
         #cart { position: fixed; right: 10px; bottom: 10px; background-color: #fff; padding: 10px; border: 1px solid #ccc; }
         #cart-items { list-style: none; padding: 0; }
         #cart-items li { margin: 5px 0; }
+        button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        #submit-order { margin-top: 10px; background-color: #f44336; }
     </style>
 </head>
 <body>
@@ -20,6 +23,7 @@
         <h3>Корзина</h3>
         <ul id="cart-items"></ul>
         <p id="total-price">Итого: 0 тг</p>
+        <button id="submit-order" onclick="submitOrder()">Отправить</button>
     </div>
 
     <script>
@@ -91,6 +95,23 @@
             });
 
             document.getElementById('total-price').innerText = `Итого: ${totalPrice} тг`;
+        }
+
+        // Отправить заказ
+        function submitOrder() {
+            if (cart.length === 0) {
+                alert("Ваша корзина пуста. Добавьте товары в корзину перед отправкой.");
+                return;
+            }
+
+            // Для примера отправим заказ через console.log. В реальном проекте сюда будет добавлена логика отправки на сервер
+            console.log("Заказ отправлен:", cart);
+
+            // Очистим корзину после отправки
+            localStorage.removeItem('cart');
+            cart = [];
+            updateCart();  // Обновляем корзину после отправки
+            alert("Ваш заказ отправлен!");
         }
 
         loadProducts();
