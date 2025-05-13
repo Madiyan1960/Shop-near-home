@@ -42,11 +42,11 @@
         function loadProducts() {
             fetch('https://shrill-haze-b867.mironovka6.workers.dev/products')
             .then(res => {
-                console.log("Запрос выполнен, статус:", res.status); // Выводим статус ответа
+                console.log("Запрос выполнен, статус:", res.status);
                 return res.json();
             })
             .then(data => {
-                console.log("Загружены товары:", data); // Проверим, что данные приходят
+                console.log("Загружены товары:", data);
                 if (data.length === 0) {
                     console.error("Нет данных о товарах");
                     return;
@@ -65,7 +65,7 @@
                         <h3>${name}</h3>
                         <img src="${imgUrl}" alt="${name}">
                         <p>Цена: ${price} тг</p>
-                        <button onclick="addToCart('${name}', ${price})">В корзину</button>
+                        <button onclick="addToCart('${name}', ${price}, '${imgUrl}')">В корзину</button>
                     `;
                     container.appendChild(div);
                 });
@@ -75,15 +75,15 @@
             });
         }
 
-        // Добавляем товар в корзину
+        // Инициализация корзины
         let cart = JSON.parse(localStorage.getItem('cart')) || [];
 
-        function addToCart(name, price) {
-            const product = { name, price, quantity: 1 };
+        function addToCart(name, price, imgUrl) {
+            const product = { name, price, quantity: 1, imgUrl };
             const existingProduct = cart.find(item => item.name === name);
 
             if (existingProduct) {
-                existingProduct.quantity += 1;  // Увеличиваем количество
+                existingProduct.quantity += 1;
             } else {
                 cart.push(product);
             }
@@ -92,7 +92,7 @@
             updateCart();
         }
 
-        // Обновляем корзину
+        // Обновление корзины
         function updateCart() {
             const cartItemsContainer = document.getElementById('cart-items');
             cartItemsContainer.innerHTML = '';
@@ -110,21 +110,20 @@
 
         // Показываем форму для заказа
         function showOrderForm() {
-            document.getElementById('order-form').style.display = 'block';
-        }
-
-        // Отправить заказ
-        function submitOrder(event) {
-            event.preventDefault(); // Предотвращаем стандартное поведение формы
-
-            const name = document.getElementById('name').value;
-            const phone = document.getElementById('phone').value;
-            const address = document.getElementById('address').value;
-
             if (cart.length === 0) {
                 alert("Ваша корзина пуста. Добавьте товары в корзину перед отправкой.");
                 return;
             }
+            document.getElementById('order-form').style.display = 'block';
+        }
+
+        // Отправка заказа
+        function submitOrder(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            const address = document.getElementById('address').value;
 
             // Формируем заказ
             const order = {
@@ -132,12 +131,12 @@
                     Name: name,
                     Phone: phone,
                     Address: address,
-                    Products: cart.map(item => item.name).join(", "),
+                    Products: cart.map(item => `${item.name} (${item.quantity} x ${item.price} тг)`).join(", "),
                     Total: cart.reduce((total, item) => total + (item.price * item.quantity), 0)
                 }
             };
 
-            // Отправляем заказ в Airtable или другую систему
+            // Отправляем заказ в Airtable
             fetch('https://api.airtable.com/v0/YOUR_AIRTABLE_BASE/Orders', {
                 method: 'POST',
                 headers: {
@@ -150,11 +149,14 @@
             .then(data => {
                 console.log("Заказ успешно отправлен:", data);
                 alert("Ваш заказ успешно отправлен!");
-                // Очистим корзину
+
+                // Очистка корзины
                 localStorage.removeItem('cart');
                 cart = [];
-                updateCart(); // Обновляем корзину
-                document.getElementById('order-form').style.display = 'none'; // Скрываем форму
+                updateCart();
+
+                // Скрытие формы
+                document.getElementById('order-form').style.display = 'none';
             })
             .catch(error => {
                 console.error("Ошибка при отправке заказа:", error);
@@ -162,6 +164,7 @@
             });
         }
 
+        // Загружаем товары при старте
         loadProducts();
         updateCart();  // Инициализируем корзину при загрузке страницы
     </script>
