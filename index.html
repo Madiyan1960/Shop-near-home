@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#ffffff" />
   <title>Магазин</title>
   <link rel="manifest" href="manifest.json" />
   <style>
@@ -107,7 +108,7 @@
 
   <div id="main">
     <h1>Товары</h1>
-    <div id="products"></div>
+    <div id="products">Загрузка товаров...</div>
   </div>
 
   <div id="toast">Добавлено в корзину!</div>
@@ -165,14 +166,26 @@
     }
 
     fetch('https://shrill-haze-b867.mironovka6.workers.dev/products')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error(`Ошибка HTTP: ${res.status}`);
+        return res.json();
+      })
       .then(data => {
+        console.log('Товары загружены:', data);
         const container = document.getElementById('products');
+        container.innerHTML = '';
+
+        if (!Array.isArray(data) || data.length === 0) {
+          container.innerHTML = '<p>Нет доступных товаров.</p>';
+          return;
+        }
+
         data.forEach(record => {
-          const fields = record.fields;
-          const name = fields['Products'];
-          const price = fields['Price'];
-          const imgUrl = fields['Image']?.[0]?.url;
+          const fields = record.fields || {};
+          const name = fields['Products'] || 'Без названия';
+          const price = fields['Price'] || 0;
+          const imageArray = fields['Image'];
+          const imgUrl = imageArray && imageArray[0] && imageArray[0].url;
 
           const div = document.createElement('div');
           div.className = 'product';
@@ -180,10 +193,14 @@
             <h3>${name}</h3>
             <p>Цена: ${price} тг</p>
             ${imgUrl ? `<img src="${imgUrl}" class="product-img">` : ''}
-            <button onclick='flyToCart(this, "${imgUrl}"); addToCart({name: "${name}", price: ${price}})'>В корзину</button>
+            <button onclick='flyToCart(this, "${imgUrl || ""}"); addToCart({name: "${name}", price: ${price}})'>В корзину</button>
           `;
           container.appendChild(div);
         });
+      })
+      .catch(err => {
+        console.error('Ошибка загрузки товаров:', err);
+        document.getElementById('products').innerHTML = '<p>Ошибка загрузки товаров. Проверьте соединение.</p>';
       });
 
     function submitOrder() {
@@ -250,7 +267,8 @@
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('service-worker.js')
-        .then(() => console.log('Service Worker зарегистрирован'));
+        .then(() => console.log('Service Worker зарегистрирован'))
+        .catch(err => console.error('Service Worker ошибка:', err));
     }
   </script>
 </body>
