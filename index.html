@@ -100,6 +100,17 @@
       background: #ddd;
     }
 
+    /* Кнопки + и - */
+    .quantity-btn.plus {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .quantity-btn.minus {
+      background-color: #dc3545;
+      color: white;
+    }
+
     .fly-img {
       position: absolute;
       pointer-events: none;
@@ -107,6 +118,21 @@
       z-index: 1000;
       width: 60px;
       border-radius: 4px;
+    }
+
+    /* Иконка корзины */
+    #cart-icon {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #28a745;
+      padding: 15px;
+      border-radius: 50%;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+      z-index: 1100;
     }
 
     /* Мобильные стили */
@@ -125,6 +151,7 @@
 </head>
 <body>
 
+  <!-- Корзина -->
   <div id="cart">
     <h3>Корзина</h3>
     <ul id="cart-items"></ul>
@@ -138,10 +165,14 @@
     <p id="status"></p>
   </div>
 
+  <!-- Основная часть -->
   <div id="main">
     <h1>Товары</h1>
     <div id="products"></div>
   </div>
+
+  <!-- Иконка корзины -->
+  <div id="cart-icon" onclick="toggleCart()">🛒</div>
 
   <script>
     const cart = [];
@@ -165,8 +196,8 @@
       cart.forEach((item, index) => {
         const li = document.createElement('li');
         li.innerHTML = `${index + 1}) ${item.name} - ${item.price} тг × ${item.quantity}
-          <button class="quantity-btn" onclick="changeQuantity(${index}, -1)">-</button>
-          <button class="quantity-btn" onclick="changeQuantity(${index}, 1)">+</button>`;
+          <button class="quantity-btn minus" onclick="changeQuantity(${index}, -1)">-</button>
+          <button class="quantity-btn plus" onclick="changeQuantity(${index}, 1)">+</button>`;
         cartList.appendChild(li);
         total += item.price * item.quantity;
       });
@@ -205,6 +236,11 @@
       }, 0);
 
       setTimeout(() => img.remove(), 700);
+    }
+
+    function toggleCart() {
+      const cartDiv = document.getElementById('cart');
+      cartDiv.style.display = cartDiv.style.display === 'none' ? 'block' : 'none';
     }
 
     fetch('https://shrill-haze-b867.mironovka6.workers.dev/products')
