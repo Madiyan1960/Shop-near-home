@@ -4,53 +4,127 @@
   <meta charset="UTF-8">
   <title>Магазин</title>
   <style>
-    body { font-family: sans-serif; margin: 0; padding: 0; display: flex; flex-wrap: wrap; }
+    /* Основные стили */
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+
+    /* Стили для корзины */
     #cart {
       width: 100%;
-      max-width: 300px;
-      background: #f3f3f3;
+      max-width: 320px;
+      background: #fff;
       padding: 15px;
-      border-right: 1px solid #ccc;
+      border-right: 1px solid #ddd;
       height: 100vh;
-      overflow-y: auto;
       position: fixed;
-      left: 0;
       top: 0;
+      left: 0;
       z-index: 1000;
+      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
     }
+
     #main {
-      margin-left: 320px;
+      margin-left: 340px;
       padding: 20px;
       flex: 1;
+      max-width: 100%;
     }
+
     .product {
-      border: 1px solid #ccc;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #fff;
       padding: 10px;
       margin: 10px;
       width: 200px;
       display: inline-block;
       vertical-align: top;
+      text-align: center;
       position: relative;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
-    img { max-width: 100%; height: auto; }
-    .form { margin-top: 10px; }
-    input, textarea { width: 100%; margin-bottom: 8px; padding: 6px; box-sizing: border-box; }
-    button { padding: 6px 12px; }
-    .quantity-btn { margin: 0 5px; }
-    @media (max-width: 600px) {
-      body { flex-direction: column; }
-      #cart, #main { width: 100%; margin: 0; position: static; height: auto; }
+
+    .product img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
     }
+
+    .form {
+      margin-top: 10px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-size: 14px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #28a745;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 100%;
+    }
+
+    button:hover {
+      background: #218838;
+    }
+
+    .quantity-btn {
+      padding: 5px;
+      font-size: 14px;
+      margin: 0 5px;
+      background: #f8f9fa;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .quantity-btn:hover {
+      background: #ddd;
+    }
+
     .fly-img {
       position: absolute;
       pointer-events: none;
       transition: transform 0.7s ease-in-out, opacity 0.7s ease-in-out;
       z-index: 1000;
-      width: 100px;
+      width: 60px;
+      border-radius: 4px;
+    }
+
+    /* Мобильные стили */
+    @media (max-width: 600px) {
+      body {
+        flex-direction: column;
+      }
+      #cart, #main {
+        width: 100%;
+        margin: 0;
+        position: static;
+        height: auto;
+      }
     }
   </style>
 </head>
 <body>
+
   <div id="cart">
     <h3>Корзина</h3>
     <ul id="cart-items"></ul>
@@ -63,6 +137,7 @@
     </div>
     <p id="status"></p>
   </div>
+
   <div id="main">
     <h1>Товары</h1>
     <div id="products"></div>
@@ -71,14 +146,12 @@
   <script>
     const cart = [];
 
-    // Загрузка сохранённых данных формы
     window.onload = () => {
       document.getElementById('name').value = localStorage.getItem('name') || '';
       document.getElementById('phone').value = localStorage.getItem('phone') || '+7';
       document.getElementById('address').value = localStorage.getItem('address') || '';
     };
 
-    // Автоматическое добавление +7 при фокусе на поле телефона
     document.getElementById('phone').addEventListener('focus', (event) => {
       if (event.target.value === '') {
         event.target.value = '+7';
@@ -162,7 +235,6 @@
       const address = document.getElementById('address').value.trim();
       const status = document.getElementById('status');
 
-      // Проверка номера телефона
       const phoneRegex = /^\+7\d{10}$/;
       if (!phoneRegex.test(phone)) {
         status.textContent = 'Номер телефона должен быть в формате: +7**********';
