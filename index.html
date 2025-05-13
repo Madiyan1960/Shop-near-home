@@ -1,80 +1,70 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Магазин</title>
   <style>
-    body {
-      font-family: sans-serif;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
+    * { box-sizing: border-box; }
+    body { font-family: sans-serif; margin: 0; padding: 0; display: flex; flex-direction: row; flex-wrap: wrap; }
+    #cart {
+      width: 100%;
+      max-width: 300px;
+      background: #f3f3f3;
+      padding: 15px;
+      border-right: 1px solid #ccc;
+      height: 100vh;
+      overflow-y: auto;
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 10;
     }
     #main {
-      padding: 10px;
-    }
-    #cart {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: #f8f8f8;
-      border-top: 1px solid #ccc;
-      padding: 10px;
-      box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.1);
+      margin-left: 310px;
+      padding: 20px;
+      flex: 1;
     }
     .product {
       border: 1px solid #ccc;
       padding: 10px;
       margin: 10px;
+      width: 200px;
       display: inline-block;
       vertical-align: top;
-      width: 150px;
+      position: relative;
     }
-    .product img {
-      width: 100%;
-      height: auto;
+    img { max-width: 100%; height: auto; }
+    .form { margin-top: 10px; }
+    input, textarea { width: 100%; margin-bottom: 8px; padding: 6px; }
+    button { padding: 6px 12px; }
+    .cart-btns button { margin: 0 3px; }
+    .fly-img {
+      position: absolute;
+      z-index: 1000;
+      transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
+      pointer-events: none;
     }
-    input, textarea {
-      width: 100%;
-      margin: 5px 0;
-      padding: 5px;
-    }
-    button {
-      padding: 5px 10px;
-    }
-    #cart-items li {
-      margin-bottom: 5px;
-    }
-    .quantity-btn {
-      margin: 0 5px;
-      padding: 2px 8px;
-    }
-    @media (min-width: 600px) {
-      body {
-        flex-direction: row;
+
+    @media (max-width: 768px) {
+      body { flex-direction: column; }
+      #cart {
+        width: 100%;
+        height: auto;
+        position: relative;
+        margin-bottom: 20px;
       }
       #main {
-        margin-left: 260px;
-        flex: 1;
+        margin-left: 0;
       }
-      #cart {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 250px;
-        height: 100vh;
-        overflow-y: auto;
-        border-right: 1px solid #ccc;
-        border-top: none;
+      .product {
+        width: calc(50% - 22px);
       }
     }
-    .fly-to-cart {
-      position: absolute;
-      pointer-events: none;
-      transition: all 0.8s ease;
-      z-index: 1000;
+
+    @media (max-width: 480px) {
+      .product {
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -83,7 +73,7 @@
     <h3>Корзина</h3>
     <ul id="cart-items"></ul>
     <p><strong>Итого: <span id="total">0</span> тг</strong></p>
-    <div>
+    <div class="form">
       <input type="text" id="name" placeholder="Имя">
       <input type="text" id="phone" placeholder="Телефон (WhatsApp)">
       <textarea id="address" placeholder="Адрес доставки"></textarea>
@@ -109,8 +99,10 @@
         total += item.price * item.quantity;
         const li = document.createElement('li');
         li.innerHTML = `${index + 1}. ${item.name} — ${item.price} тг × ${item.quantity}
-          <button class="quantity-btn" onclick="changeQuantity(${index}, -1)">-</button>
-          <button class="quantity-btn" onclick="changeQuantity(${index}, 1)">+</button>`;
+          <div class="cart-btns">
+            <button onclick="changeQuantity(${index}, -1)">−</button>
+            <button onclick="changeQuantity(${index}, 1)">+</button>
+          </div>`;
         cartList.appendChild(li);
       });
 
@@ -125,32 +117,38 @@
       renderCart();
     }
 
-    function addToCart(product, button) {
-      const existing = cart.find(item => item.name === product.name);
+    function flyToCart(imgElement) {
+      const cart = document.getElementById('cart');
+      const imgRect = imgElement.getBoundingClientRect();
+      const cartRect = cart.getBoundingClientRect();
+
+      const flyingImg = imgElement.cloneNode(true);
+      flyingImg.classList.add('fly-img');
+      document.body.appendChild(flyingImg);
+
+      flyingImg.style.position = 'fixed';
+      flyingImg.style.left = imgRect.left + 'px';
+      flyingImg.style.top = imgRect.top + 'px';
+      flyingImg.style.width = imgRect.width + 'px';
+      flyingImg.style.height = imgRect.height + 'px';
+
+      requestAnimationFrame(() => {
+        flyingImg.style.transform = `translate(${cartRect.left - imgRect.left}px, ${cartRect.top - imgRect.top}px) scale(0.2)`;
+        flyingImg.style.opacity = 0;
+      });
+
+      setTimeout(() => flyingImg.remove(), 800);
+    }
+
+    function addToCart(product, imgElement) {
+      const existing = cart.find(p => p.name === product.name);
       if (existing) {
         existing.quantity++;
       } else {
         cart.push({ ...product, quantity: 1 });
       }
       renderCart();
-      animateToCart(button);
-    }
-
-    function animateToCart(button) {
-      const rect = button.getBoundingClientRect();
-      const clone = button.cloneNode(true);
-      clone.className = 'fly-to-cart';
-      clone.style.top = `${rect.top}px`;
-      clone.style.left = `${rect.left}px`;
-      document.body.appendChild(clone);
-
-      setTimeout(() => {
-        clone.style.top = '10px';
-        clone.style.left = '10px';
-        clone.style.opacity = 0;
-      }, 10);
-
-      setTimeout(() => clone.remove(), 800);
+      flyToCart(imgElement);
     }
 
     fetch('https://shrill-haze-b867.mironovka6.workers.dev/products')
@@ -165,12 +163,21 @@
 
           const div = document.createElement('div');
           div.className = 'product';
+
           div.innerHTML = `
             <h3>${name}</h3>
             <p>Цена: ${price} тг</p>
-            ${imgUrl ? `<img src="${imgUrl}">` : ''}
-            <button onclick='addToCart({name: "${name}", price: ${price}}, this)'>В корзину</button>
+            ${imgUrl ? `<img src="${imgUrl}" class="product-img">` : ''}
+            <button>В корзину</button>
           `;
+
+          const button = div.querySelector('button');
+          const imgElement = div.querySelector('img');
+
+          button.addEventListener('click', () => {
+            addToCart({ name, price }, imgElement || div);
+          });
+
           container.appendChild(div);
         });
       });
@@ -182,28 +189,34 @@
       const status = document.getElementById('status');
 
       if (!name || !phone || !address || cart.length === 0) {
-        status.textContent = 'Заполните все поля и добавьте товары в корзину.';
+        status.textContent = 'Пожалуйста, заполните все поля и добавьте товары в корзину.';
         return;
       }
 
-      const products = cart.map(item => `${item.name} - ${item.price} тг × ${item.quantity}`).join(', ');
+      const products = cart.map(item => `${item.name} × ${item.quantity}`).join(', ');
       const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
       fetch('https://shrill-haze-b867.mironovka6.workers.dev/order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ Name: name, Phone: phone, Address: address, Products: products, Total: total })
-      })
-        .then(res => res.json())
-        .then(() => {
-          status.textContent = 'Заказ отправлен!';
-          cart.length = 0;
-          renderCart();
+        body: JSON.stringify({
+          Name: name,
+          Phone: phone,
+          Address: address,
+          Products: products,
+          Total: total
         })
-        .catch(err => {
-          status.textContent = 'Ошибка при отправке заказа.';
-          console.error(err);
-        });
+      })
+      .then(res => res.json())
+      .then(result => {
+        status.textContent = 'Заказ отправлен!';
+        cart.length = 0;
+        renderCart();
+      })
+      .catch(err => {
+        status.textContent = 'Ошибка при отправке заказа.';
+        console.error(err);
+      });
     }
   </script>
 </body>
