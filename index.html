@@ -9,7 +9,142 @@
         .product { display: inline-block; width: 45%; margin: 10px 0; text-align: center; }
         .product img { width: 100%; max-width: 200px; }
         #cart { position: fixed; right: 10px; bottom: 10px; background-color: #fff; padding: 10px; border: 1px solid #ccc; }
-        #cart-items { list-style: none; padding: 0; }
+        #cart-items { list-style: no<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Магазин</title>
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 0; display: flex; }
+    #cart {
+      width: 250px;
+      background: #f3f3f3;
+      padding: 15px;
+      border-right: 1px solid #ccc;
+      height: 100vh;
+      overflow-y: auto;
+      position: fixed;
+      left: 0;
+      top: 0;
+    }
+    #main { margin-left: 260px; padding: 20px; flex: 1; }
+    .product {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin: 10px;
+      width: 200px;
+      display: inline-block;
+      vertical-align: top;
+    }
+    img { max-width: 100%; }
+    .form { margin-top: 10px; }
+    input, textarea { width: 100%; margin-bottom: 8px; padding: 6px; }
+    button { padding: 6px 12px; }
+  </style>
+</head>
+<body>
+  <div id="cart">
+    <h3>Корзина</h3>
+    <ul id="cart-items"></ul>
+    <p><strong>Итого: <span id="total">0</span> тг</strong></p>
+    <div class="form">
+      <input type="text" id="name" placeholder="Имя">
+      <input type="text" id="phone" placeholder="Телефон (WhatsApp)">
+      <textarea id="address" placeholder="Адрес доставки"></textarea>
+      <button onclick="submitOrder()">Заказать</button>
+    </div>
+    <p id="status"></p>
+  </div>
+  <div id="main">
+    <h1>Товары</h1>
+    <div id="products"></div>
+  </div>
+
+  <script>
+    const cart = [];
+
+    function renderCart() {
+      const cartList = document.getElementById('cart-items');
+      cartList.innerHTML = '';
+      let total = 0;
+      cart.forEach((item, index) => {
+        const li = document.createElement('li');
+        li.textContent = `${item.name} — ${item.price} тг`;
+        cartList.appendChild(li);
+        total += item.price;
+      });
+      document.getElementById('total').textContent = total;
+    }
+
+    function addToCart(product) {
+      cart.push(product);
+      renderCart();
+    }
+
+    fetch('https://shrill-haze-b867.mironovka6.workers.dev/products')
+  .then(res => res.json())
+  .then(data => {
+    const container = document.getElementById('products');
+    data.forEach(record => {
+      const fields = record.fields;
+      const name = fields['Products']; // Исправлено здесь
+      const price = fields['Price'];
+      const imgUrl = fields['Image']?.[0]?.url;
+
+      const div = document.createElement('div');
+      div.className = 'product';
+      div.innerHTML = `
+        <h3>${name}</h3>
+        <p>Цена: ${price} тг</p>
+        ${imgUrl ? `<img src="${imgUrl}">` : ''}
+        <button onclick='addToCart({name: "${name}", price: ${price}})'>В корзину</button>
+      `;
+      container.appendChild(div);
+    });
+  });
+
+
+    function submitOrder() {
+  const name = document.getElementById('name').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const address = document.getElementById('address').value.trim();
+  const status = document.getElementById('status');
+
+  if (!name || !phone || !address || cart.length === 0) {
+    status.textContent = 'Пожалуйста, заполните все поля и добавьте товары в корзину.';
+    return;
+  }
+
+  const products = cart.map(item => item.name).join(', ');
+  const total = cart.reduce((sum, item) => sum + item.price, 0);
+
+  fetch('https://shrill-haze-b867.mironovka6.workers.dev/order', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      Name: name,
+      Phone: phone,
+      Address: address,
+      Products: products,
+      Total: total
+    })
+  })
+  .then(res => res.json())
+  .then(result => {
+    status.textContent = 'Заказ отправлен!';
+    cart.length = 0;
+    renderCart();
+  })
+  .catch(err => {
+    status.textContent = 'Ошибка при отправке заказа.';
+    console.error(err);
+  });
+}
+
+  </script>
+</body>
+</html>
+ne; padding: 0; }
         #cart-items li { margin: 5px 0; }
         button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
         button:hover { background-color: #45a049; }
