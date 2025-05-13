@@ -39,12 +39,17 @@
       flex: 1;
       max-width: calc(100% - 340px);
       box-sizing: border-box;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center; /* Центрируем товары */
     }
 
     #products {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr); /* 2 колонки */
+      gap: 10px;
+      width: 100%;
+      justify-items: center; /* Центрируем товары */
     }
 
     .product {
@@ -52,8 +57,7 @@
       border-radius: 8px;
       background: #fff;
       padding: 10px;
-      margin: 10px;
-      width: 200px;
+      width: 180px;
       text-align: center;
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
@@ -64,67 +68,32 @@
       border-radius: 8px;
     }
 
-    .form {
-      margin-top: 10px;
-    }
+    /* Мобильные стили */
+    @media (max-width: 768px) {
+      #cart {
+        position: static;
+        width: 100%;
+        height: auto;
+        max-height: none;
+        margin-bottom: 10px;
+      }
 
-    input, textarea {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 10px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      box-sizing: border-box;
-      font-size: 14px;
-    }
+      #main {
+        margin-left: 0;
+        max-width: 100%;
+        padding: 10px;
+      }
 
-    button {
-      padding: 10px 20px;
-      background: #28a745;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 16px;
-      width: 100%;
-    }
+      .product {
+        width: 45%; /* Делим на 2 колонки на мобильных */
+        margin: 5px;
+      }
 
-    button:hover {
-      background: #218838;
-    }
-
-    .quantity-btn {
-      padding: 5px;
-      font-size: 14px;
-      margin: 0 5px;
-      background: #f8f9fa;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .quantity-btn:hover {
-      background: #ddd;
-    }
-
-    /* Кнопки + и - */
-    .quantity-btn.plus {
-      background-color: #28a745;
-      color: white;
-    }
-
-    .quantity-btn.minus {
-      background-color: #dc3545;
-      color: white;
-    }
-
-    .fly-img {
-      position: absolute;
-      pointer-events: none;
-      transition: transform 0.7s ease-in-out, opacity 0.7s ease-in-out;
-      z-index: 1000;
-      width: 60px;
-      border-radius: 4px;
+      #cart-icon {
+        bottom: 15px;
+        right: 15px;
+        font-size: 20px;
+      }
     }
 
     /* Иконка корзины */
@@ -142,23 +111,34 @@
       z-index: 1100;
     }
 
-    /* Мобильные стили */
-    @media (max-width: 600px) {
-      body {
-        flex-direction: column;
-      }
-      #cart, #main {
-        width: 100%;
-        margin: 0;
-        position: static;
-        height: auto;
-      }
+    /* Стили для кнопок + и - */
+    .quantity-btn {
+      padding: 5px;
+      font-size: 14px;
+      margin: 0 5px;
+      background: #f8f9fa;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
     }
 
-    @media (max-width: 768px) {
-      #cart {
-        display: none;
-      }
+    .quantity-btn.plus {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .quantity-btn.minus {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    .fly-img {
+      position: absolute;
+      pointer-events: none;
+      transition: transform 0.7s ease-in-out, opacity 0.7s ease-in-out;
+      z-index: 1000;
+      width: 60px;
+      border-radius: 4px;
     }
   </style>
 </head>
@@ -195,12 +175,6 @@
       document.getElementById('phone').value = localStorage.getItem('phone') || '+7';
       document.getElementById('address').value = localStorage.getItem('address') || '';
     };
-
-    document.getElementById('phone').addEventListener('focus', (event) => {
-      if (event.target.value === '') {
-        event.target.value = '+7';
-      }
-    });
 
     function renderCart() {
       const cartList = document.getElementById('cart-items');
