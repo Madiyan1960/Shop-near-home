@@ -89,6 +89,7 @@
 fetch('https://shrill-haze-b867.mironovka6.workers.dev/products')
   .then(r => r.ok ? r.json() : Promise.reject('Ошибка загрузки'))
   .then(data => {
+    document.getElementById('loading').style.display = 'none'; // Скрыть индикатор
     const box = document.getElementById('products');
     box.innerHTML = '';
 
@@ -99,7 +100,7 @@ fetch('https://shrill-haze-b867.mironovka6.workers.dev/products')
 
     data.forEach(item => {
       const f = item.fields || {};
-      const name = f.Products || 'Без названия';
+      const name = f.Name || f.Products || 'Без названия';
       const price = f.Price || 0;
       const img = f.Image?.[0]?.url || '';
 
@@ -116,8 +117,10 @@ fetch('https://shrill-haze-b867.mironovka6.workers.dev/products')
     });
   })
   .catch(() => {
+    document.getElementById('loading').style.display = 'none'; // Скрыть индикатор в случае ошибки
     document.getElementById('products').innerHTML = '<p>Ошибка загрузки товаров.</p>';
   });
+
 
 
     function submitOrder() {
