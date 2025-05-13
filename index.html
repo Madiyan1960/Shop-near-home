@@ -325,9 +325,16 @@
     }
 
     function toggleCart() {
-      const cartDiv = document.getElementById('cart');
-      cartDiv.style.display = cartDiv.style.display === 'none' ? 'block' : 'none';
-    }
+  const cartDiv = document.getElementById('cart');
+  if (window.innerWidth <= 768) {
+    // на телефоне — переключаем display
+    cartDiv.style.display = cartDiv.style.display === 'block' ? 'none' : 'block';
+  } else {
+    // на десктопе — просто скроллим вверх к корзине
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
 
     fetch('https://shrill-haze-b867.mironovka6.workers.dev/products')
       .then(res => res.json())
