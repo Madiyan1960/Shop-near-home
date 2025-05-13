@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Магазин</title>
   <style>
-    /* Основные стили */
     body {
       font-family: 'Arial', sans-serif;
       margin: 0;
@@ -41,15 +40,15 @@
       box-sizing: border-box;
       display: flex;
       flex-wrap: wrap;
-      justify-content: center; /* Центрируем товары */
+      justify-content: center;
     }
 
     #products {
       display: grid;
-      grid-template-columns: repeat(2, 1fr); /* 2 колонки */
+      grid-template-columns: repeat(2, 1fr);
       gap: 10px;
       width: 100%;
-      justify-items: center; /* Центрируем товары */
+      justify-items: center;
       box-sizing: border-box;
     }
 
@@ -61,6 +60,7 @@
       width: 180px;
       text-align: center;
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
     }
 
     .product img {
@@ -86,23 +86,15 @@
       }
 
       .product {
-        width: 100%; /* Товары занимают всю ширину на мобильных */
+        width: 100%;
         margin: 5px;
       }
 
-      #cart-icon {
-        bottom: 15px;
-        right: 15px;
-        font-size: 20px;
-      }
-
-      /* Убираем колонок 2 на мобильных, товары в 1 колонку */
       #products {
-        grid-template-columns: 1fr !important; /* Принудительно одна колонка на мобильных */
+        grid-template-columns: 1fr !important;
       }
     }
 
-    /* Иконка корзины */
     #cart-icon {
       position: fixed;
       bottom: 20px;
@@ -117,27 +109,6 @@
       z-index: 1100;
     }
 
-    /* Стили для кнопок + и - */
-    .quantity-btn {
-      padding: 5px;
-      font-size: 14px;
-      margin: 0 5px;
-      background: #f8f9fa;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .quantity-btn.plus {
-      background-color: #28a745;
-      color: white;
-    }
-
-    .quantity-btn.minus {
-      background-color: #dc3545;
-      color: white;
-    }
-
     .fly-img {
       position: absolute;
       pointer-events: none;
@@ -150,7 +121,6 @@
 </head>
 <body>
 
-  <!-- Корзина -->
   <div id="cart">
     <h3>Корзина</h3>
     <ul id="cart-items"></ul>
@@ -164,13 +134,11 @@
     <p id="status"></p>
   </div>
 
-  <!-- Основная часть -->
   <div id="main">
     <h1>Товары</h1>
     <div id="products"></div>
   </div>
 
-  <!-- Иконка корзины -->
   <div id="cart-icon" onclick="toggleCart()">🛒</div>
 
   <script>
@@ -180,27 +148,39 @@
       document.getElementById('name').value = localStorage.getItem('name') || '';
       document.getElementById('phone').value = localStorage.getItem('phone') || '+7';
       document.getElementById('address').value = localStorage.getItem('address') || '';
+      loadProducts();
     };
 
-    function renderCart() {
-      const cartList = document.getElementById('cart-items');
-      cartList.innerHTML = '';
-      let total = 0;
-      cart.forEach((item, index) => {
-        const li = document.createElement('li');
-        li.innerHTML = `${index + 1}) ${item.name} - ${item.price} тг × ${item.quantity}
-          <button class="quantity-btn minus" onclick="changeQuantity(${index}, -1)">-</button>
-          <button class="quantity-btn plus" onclick="changeQuantity(${index}, 1)">+</button>`;
-        cartList.appendChild(li);
-        total += item.price * item.quantity;
-      });
-      document.getElementById('total').textContent = total;
-    }
+    function loadProducts() {
+      fetch('https://shrill-haze-b867.mironovka6.workers.dev/products')
+        .then(res => res.json())
+        .then(data => {
+          const container = document.getElementById('products');
+          if (data.length === 0) {
+            console.error("Нет данных о товарах");
+            return;
+          }
 
-    function changeQuantity(index, delta) {
-      cart[index].quantity += delta;
-      if (cart[index].quantity <= 0) cart.splice(index, 1);
-      renderCart();
+          data.forEach(record => {
+            const fields = record.fields;
+            const name = fields['Products'];
+            const price = fields['Price'];
+            const imgUrl = fields['Image']?.[0]?.url;
+
+            const div = document.createElement('div');
+            div.className = 'product';
+            div.innerHTML = `
+              <h3>${name}</h3>
+              <p>Цена: ${price} тг</p>
+              ${imgUrl ? `<img src="${imgUrl}" onclick="addToCart({name: '${name}', price: ${price}}, this)">` : ''}
+              <button onclick="addToCart({name: '${name}', price: ${price}}, this.previousElementSibling)">В корзину</button>
+            `;
+            container.appendChild(div);
+          });
+        })
+        .catch(err => {
+          console.error("Ошибка при загрузке товаров:", err);
+        });
     }
 
     function addToCart(product, imgElement) {
@@ -214,94 +194,12 @@
       flyToCart(imgElement);
     }
 
-    function flyToCart(imgElement) {
-      const img = imgElement.cloneNode(true);
-      const rect = imgElement.getBoundingClientRect();
-      img.classList.add('fly-img');
-      img.style.top = `${rect.top + window.scrollY}px`;
-      img.style.left = `${rect.left + window.scrollX}px`;
-      document.body.appendChild(img);
-
-      const cartRect = document.getElementById('cart').getBoundingClientRect();
-      setTimeout(() => {
-        img.style.transform = `translate(${cartRect.left - rect.left}px, ${cartRect.top - rect.top}px) scale(0.2)`;
-        img.style.opacity = 0;
-      }, 0);
-
-      setTimeout(() => img.remove(), 700);
-    }
-
-    function toggleCart() {
-      const cartDiv = document.getElementById('cart');
-      if (window.innerWidth <= 768) {
-        cartDiv.style.display = cartDiv.style.display === 'block' ? 'none' : 'block';
-      } else {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    }
-
-    fetch('https://shrill-haze-b867.mironovka6.workers.dev/products')
-      .then(res => res.json())
-      .then(data => {
-        const container = document.getElementById('products');
-        data.forEach(record => {
-          const fields = record.fields;
-          const name = fields['Products'];
-          const price = fields['Price'];
-          const imgUrl = fields['Image']?.[0]?.url;
-
-          const div = document.createElement('div');
-          div.className = 'product';
-          div.innerHTML = `
-            <h3>${name}</h3>
-            <p>Цена: ${price} тг</p>
-            ${imgUrl ? `<img src="${imgUrl}" onclick="addToCart({name: '${name}', price: ${price}}, this)">` : ''}
-            <button onclick="addToCart({name: '${name}', price: ${price}}, this.previousElementSibling)">В корзину</button>
-          `;
-          container.appendChild(div);
-        });
-      });
-
-    function submitOrder() {
-      const name = document.getElementById('name').value.trim();
-      let phone = document.getElementById('phone').value.trim();
-      const address = document.getElementById('address').value.trim();
-      const status = document.getElementById('status');
-
-      const phoneRegex = /^\+7\d{10}$/;
-      if (!phoneRegex.test(phone)) {
-        status.textContent = 'Номер телефона должен быть в формате: +7**********';
-        return;
-      }
-
-      if (!name || !phone || !address || cart.length === 0) {
-        status.textContent = 'Заполните все поля и добавьте товары.';
-        return;
-      }
-
-      localStorage.setItem('name', name);
-      localStorage.setItem('phone', phone);
-      localStorage.setItem('address', address);
-
-      const products = cart.map(item => `${item.name} - ${item.price} тг × ${item.quantity}`).join(', ');
-      const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-      fetch('https://shrill-haze-b867.mironovka6.workers.dev/order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ Name: name, Phone: phone, Address: address, Products: products, Total: total })
-      })
-      .then(res => res.json())
-      .then(result => {
-        status.textContent = 'Заказ отправлен!';
-        cart.length = 0;
-        renderCart();
-      })
-      .catch(err => {
-        status.textContent = 'Ошибка при отправке заказа.';
-        console.error(err);
-      });
-    }
-  </script>
-</body>
-</html>
+    function renderCart() {
+      const cartList = document.getElementById('cart-items');
+      cartList.innerHTML = '';
+      let total = 0;
+      cart.forEach((item, index) => {
+        const li = document.createElement('li');
+        li.innerHTML = `${index + 1}) ${item.name} - ${item.price} тг × ${item.quantity}
+          <button class="quantity-btn minus" onclick="changeQuantity(${index}, -1)">-</button>
+          <button class="quantity-btn plus" onclick="changeQuantity(${index}, 1)">+</button>`;
