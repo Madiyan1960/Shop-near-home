@@ -57,7 +57,7 @@
     <p><strong>Итого: <span id="total">0</span> тг</strong></p>
     <div class="form">
       <input type="text" id="name" placeholder="Имя">
-      <input type="text" id="phone" placeholder="Телефон (WhatsApp)">
+      <input type="text" id="phone" placeholder="Телефон (формат: +7**********)">
       <textarea id="address" placeholder="Адрес доставки"></textarea>
       <button onclick="submitOrder()">Заказать</button>
     </div>
@@ -151,9 +151,16 @@
 
     function submitOrder() {
       const name = document.getElementById('name').value.trim();
-      const phone = document.getElementById('phone').value.trim();
+      let phone = document.getElementById('phone').value.trim();
       const address = document.getElementById('address').value.trim();
       const status = document.getElementById('status');
+
+      // Проверка номера телефона
+      const phoneRegex = /^\+7\d{10}$/;
+      if (!phoneRegex.test(phone)) {
+        status.textContent = 'Номер телефона должен быть в формате: +7**********';
+        return;
+      }
 
       if (!name || !phone || !address || cart.length === 0) {
         status.textContent = 'Заполните все поля и добавьте товары.';
