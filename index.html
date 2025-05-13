@@ -155,6 +155,7 @@
       fetch('https://shrill-haze-b867.mironovka6.workers.dev/products')
         .then(res => res.json())
         .then(data => {
+          console.log("Data loaded:", data);  // Отладка: проверка, загружаются ли данные
           const container = document.getElementById('products');
           if (data.length === 0) {
             console.error("Нет данных о товарах");
@@ -203,3 +204,84 @@
         li.innerHTML = `${index + 1}) ${item.name} - ${item.price} тг × ${item.quantity}
           <button class="quantity-btn minus" onclick="changeQuantity(${index}, -1)">-</button>
           <button class="quantity-btn plus" onclick="changeQuantity(${index}, 1)">+</button>`;
+        cartList.appendChild(li);
+        total += item.price * item.quantity;
+      });
+      document.getElementById('total').textContent = total;
+    }
+
+    function changeQuantity(index, delta) {
+      cart[index].quantity += delta;
+      if (cart[index].quantity <= 0) cart.splice(index, 1);
+      renderCart();
+    }
+
+    function flyToCart(imgElement) {
+      const img = imgElement.cloneNode(true);
+      const rect = imgElement.getBoundingClientRect();
+      img.classList.add('fly-img');
+      img.style.top = `${rect.top + window.scrollY}px`;
+      img.style.left = `${rect.left + window.scrollX}px`;
+      document.body.appendChild(img);
+
+      const cartRect = document.getElementById('cart').getBoundingClientRect();
+      setTimeout(() => {
+        img.style.transform = `translate(${cartRect.left - rect.left}px, ${cartRect.top - rect.top}px) scale(0.2)`;
+        img.style.opacity = 0;
+      }, 0);
+
+      setTimeout(() => img.remove(), 700);
+    }
+
+    function toggleCart() {
+      const cartDiv = document.getElementById('cart');
+      if (window.innerWidth <= 768) {
+        cartDiv.style.display = cartDiv.style.display === 'block' ? 'none' : 'block';
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function submitOrder() {
+      const name = document.getElementById('name').value.trim();
+      let phone = document.getElementById('phone').value.trim();
+      const address = document.getElementById('address').value.trim();
+      const status = document.getElementById('status');
+
+      const phoneRegex = /^\+7\d{10}$/;
+      if (!phoneRegex.test(phone)) {
+        status.textContent = 'Номер телефона должен быть в формате: +7**********';
+        return;
+      }
+
+      if (!name || !phone || !address || cart.length === 0) {
+        status.textContent = 'Заполните все поля и добавьте товары.';
+        return;
+      }
+
+      localStorage.setItem('name', name);
+      localStorage.setItem('phone', phone);
+      localStorage.setItem('address', address);
+
+      const products = cart.map(item => `${item.name} - ${item.price} тг × ${item.quantity}`).join(', ');
+      const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+      fetch('https://shrill-haze-b867.mironovka6.workers.dev/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Name: name, Phone: phone, Address: address, Products: products, Total: total })
+      })
+      .then(res => res.json())
+      .then(result => {
+        status.textContent = 'Заказ отправлен!';
+        cart.length = 0;
+        renderCart();
+      })
+      .catch(err => {
+        status.textContent = 'Ошибка при отправке заказа.';
+        console.error(err);
+      });
+    }
+  </script>
+</body>
+</html>
