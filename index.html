@@ -127,41 +127,26 @@
 
             // Формируем заказ
             const order = {
-                fields: {
-                    Name: name,
-                    Phone: phone,
-                    Address: address,
-                    Products: cart.map(item => `${item.name} (${item.quantity} x ${item.price} тг)`).join(", "),
-                    Total: cart.reduce((total, item) => total + (item.price * item.quantity), 0)
-                }
+                name,
+                phone,
+                address,
+                products: cart.map(item => `${item.name} (${item.quantity} x ${item.price} тг)`).join(", "),
+                total: cart.reduce((total, item) => total + (item.price * item.quantity), 0)
             };
 
-            // Отправляем заказ в Airtable
-            fetch('https://api.airtable.com/v0/YOUR_AIRTABLE_BASE/Orders', {
-                method: 'POST',
-                headers: {
-                    'Authorization': 'Bearer YOUR_AIRTABLE_API_KEY',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(order)
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log("Заказ успешно отправлен:", data);
-                alert("Ваш заказ успешно отправлен!");
+            // Здесь вы можете отправить заказ на сервер или обработать его по-другому
+            console.log("Заказ:", order);
 
-                // Очистка корзины
-                localStorage.removeItem('cart');
-                cart = [];
-                updateCart();
+            // Показать подтверждение
+            alert("Ваш заказ успешно отправлен!");
 
-                // Скрытие формы
-                document.getElementById('order-form').style.display = 'none';
-            })
-            .catch(error => {
-                console.error("Ошибка при отправке заказа:", error);
-                alert("Произошла ошибка при отправке заказа.");
-            });
+            // Очистка корзины
+            localStorage.removeItem('cart');
+            cart = [];
+            updateCart();
+
+            // Скрытие формы
+            document.getElementById('order-form').style.display = 'none';
         }
 
         // Загружаем товары при старте
