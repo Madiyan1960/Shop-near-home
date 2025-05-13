@@ -74,7 +74,7 @@
         const li = document.createElement('li');
         li.className = 'cart-item';
         li.innerHTML = `
-          <span>${index + 1}. ${item.name}</span>
+          <span>${item.name} - ${item.price} тг × ${item.quantity}</span>
           <div class="quantity-control">
             <button onclick="updateQuantity(${index}, -1)">-</button>
             <span>${item.quantity}</span>
@@ -150,7 +150,7 @@
         return;
       }
 
-      const products = cart.map(item => `${item.name} (x${item.quantity})`).join(', ');
+      const products = cart.map(item => `${item.name} - ${item.price} тг × ${item.quantity}`).join(', ');
       const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
       fetch('https://shrill-haze-b867.mironovka6.workers.dev/order', {
