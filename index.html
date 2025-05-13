@@ -150,6 +150,7 @@
         return;
       }
 
+      // Формируем строку с товарами в нужном формате
       const products = cart.map(item => `${item.name} - ${item.price} тг × ${item.quantity}`).join(', ');
       const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
@@ -160,7 +161,7 @@
           Name: name,
           Phone: phone,
           Address: address,
-          Products: products,
+          Products: products,  // Отправляем строку с товарами
           Total: total
         })
       })
