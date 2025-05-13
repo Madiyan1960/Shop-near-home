@@ -135,9 +135,9 @@
         const div = document.createElement("div");
         div.className = "product";
         div.innerHTML = `
-          <img src="${p.fields.image || 'https://via.placeholder.com/150'}" alt="">
-          <h4>${p.fields.name}</h4>
-          <p>${p.fields.price} тг</p>
+          <img src="${p.fields.Image || 'https://via.placeholder.com/150'}" alt="">
+          <h4>${p.fields.Products}</h4>
+          <p>${p.fields.Price} тг</p>
           <button class="add" onclick="addToCart(${p.id}, '${p.fields.name}', ${p.fields.price}, this)">Добавить</button>
         `;
         main.appendChild(div);
