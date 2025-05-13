@@ -334,7 +334,14 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
-
+function toggleCart() {
+  const cartDiv = document.getElementById('cart');
+  if (window.innerWidth <= 768) {
+    cartDiv.style.display = cartDiv.style.display === 'block' ? 'none' : 'block';
+  } else {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
 
     fetch('https://shrill-haze-b867.mironovka6.workers.dev/products')
       .then(res => res.json())
