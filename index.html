@@ -71,26 +71,27 @@
     }
 
     fetch('https://shrill-haze-b867.mironovka6.workers.dev/products')
-      .then(res => res.json())
-      .then(data => {
-        const container = document.getElementById('products');
-        data.forEach(record => {
-          const fields = record.fields;
-          const products = fields['Products'];
-          const price = fields['Price'];
-          const imgUrl = fields['Image']?.[0]?.url;
+  .then(res => res.json())
+  .then(data => {
+    const container = document.getElementById('products');
+    data.forEach(record => {
+      const fields = record.fields;
+      const name = fields['Products']; // Исправлено здесь
+      const price = fields['Price'];
+      const imgUrl = fields['Image']?.[0]?.url;
 
-          const div = document.createElement('div');
-          div.className = 'product';
-          div.innerHTML = `
-            <h3>${name}</h3>
-            <p>Цена: ${price} тг</p>
-            ${imgUrl ? `<img src="${imgUrl}">` : ''}
-            <button onclick='addToCart({name: "${name}", price: ${price}})'>В корзину</button>
-          `;
-          container.appendChild(div);
-        });
-      });
+      const div = document.createElement('div');
+      div.className = 'product';
+      div.innerHTML = `
+        <h3>${name}</h3>
+        <p>Цена: ${price} тг</p>
+        ${imgUrl ? `<img src="${imgUrl}">` : ''}
+        <button onclick='addToCart({name: "${name}", price: ${price}})'>В корзину</button>
+      `;
+      container.appendChild(div);
+    });
+  });
+
 
     function submitOrder() {
   const name = document.getElementById('name').value.trim();
