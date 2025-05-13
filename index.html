@@ -14,6 +14,7 @@
         button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
         button:hover { background-color: #45a049; }
         #submit-order { margin-top: 10px; background-color: #f44336; }
+        #order-form input, #order-form button { margin: 5px 0; padding: 10px; width: 100%; }
     </style>
 </head>
 <body>
@@ -23,7 +24,17 @@
         <h3>Корзина</h3>
         <ul id="cart-items"></ul>
         <p id="total-price">Итого: 0 тг</p>
-        <button id="submit-order" onclick="submitOrder()">Отправить</button>
+        <button id="submit-order" onclick="showOrderForm()">Отправить</button>
+    </div>
+
+    <div id="order-form" style="display: none;">
+        <h3>Введите ваши данные для заказа</h3>
+        <form onsubmit="submitOrder(event)">
+            <input type="text" id="name" placeholder="Имя" required />
+            <input type="tel" id="phone" placeholder="Телефон" required />
+            <input type="text" id="address" placeholder="Адрес" required />
+            <button type="submit">Отправить заказ</button>
+        </form>
     </div>
 
     <script>
@@ -97,21 +108,58 @@
             document.getElementById('total-price').innerText = `Итого: ${totalPrice} тг`;
         }
 
+        // Показываем форму для заказа
+        function showOrderForm() {
+            document.getElementById('order-form').style.display = 'block';
+        }
+
         // Отправить заказ
-        function submitOrder() {
+        function submitOrder(event) {
+            event.preventDefault(); // Предотвращаем стандартное поведение формы
+
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            const address = document.getElementById('address').value;
+
             if (cart.length === 0) {
                 alert("Ваша корзина пуста. Добавьте товары в корзину перед отправкой.");
                 return;
             }
 
-            // Для примера отправим заказ через console.log. В реальном проекте сюда будет добавлена логика отправки на сервер
-            console.log("Заказ отправлен:", cart);
+            // Формируем заказ
+            const order = {
+                fields: {
+                    Name: name,
+                    Phone: phone,
+                    Address: address,
+                    Products: cart.map(item => item.name).join(", "),
+                    Total: cart.reduce((total, item) => total + (item.price * item.quantity), 0)
+                }
+            };
 
-            // Очистим корзину после отправки
-            localStorage.removeItem('cart');
-            cart = [];
-            updateCart();  // Обновляем корзину после отправки
-            alert("Ваш заказ отправлен!");
+            // Отправляем заказ в Airtable или другую систему
+            fetch('https://api.airtable.com/v0/YOUR_AIRTABLE_BASE/Orders', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer YOUR_AIRTABLE_API_KEY',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(order)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Заказ успешно отправлен:", data);
+                alert("Ваш заказ успешно отправлен!");
+                // Очистим корзину
+                localStorage.removeItem('cart');
+                cart = [];
+                updateCart(); // Обновляем корзину
+                document.getElementById('order-form').style.display = 'none'; // Скрываем форму
+            })
+            .catch(error => {
+                console.error("Ошибка при отправке заказа:", error);
+                alert("Произошла ошибка при отправке заказа.");
+            });
         }
 
         loadProducts();
