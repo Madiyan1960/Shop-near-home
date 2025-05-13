@@ -152,41 +152,41 @@
     };
 
     function loadProducts() {
-      fetch('https://shrill-haze-b867.mironovka6.workers.dev/products')
-        .then(res => {
-          console.log("Запрос выполнен, статус:", res.status);
-          return res.json();
-        })
-        .then(data => {
-          if (data.length === 0) {
-            console.error("Нет данных о товарах");
-            return;
-          }
+  fetch('https://shrill-haze-b867.mironovka6.workers.dev/products')
+    .then(res => {
+      console.log("Запрос выполнен, статус:", res.status);  // Выводим статус ответа
+      return res.json();
+    })
+    .then(data => {
+      console.log("Загружены товары:", data);  // Проверим, что данные приходят
+      if (data.length === 0) {
+        console.error("Нет данных о товарах");
+        return;
+      }
 
-          const container = document.getElementById('products');
-          console.log("Загружены товары:", data);
+      const container = document.getElementById('products');
+      data.forEach(record => {
+        const fields = record.fields;
+        const name = fields['Products'];
+        const price = fields['Price'];
+        const imgUrl = fields['Image']?.[0]?.url;
 
-          data.forEach(record => {
-            const fields = record.fields;
-            const name = fields['Products'];
-            const price = fields['Price'];
-            const imgUrl = fields['Image']?.[0]?.url;
+        const div = document.createElement('div');
+        div.className = 'product';
+        div.innerHTML = `
+          <h3>${name}</h3>
+          <p>Цена: ${price} тг</p>
+          ${imgUrl ? `<img src="${imgUrl}" onclick="addToCart({name: '${name}', price: ${price}}, this)">` : ''}
+          <button onclick="addToCart({name: '${name}', price: ${price}}, this.previousElementSibling)">В корзину</button>
+        `;
+        container.appendChild(div);
+      });
+    })
+    .catch(err => {
+      console.error("Ошибка при загрузке товаров:", err);
+    });
+}
 
-            const div = document.createElement('div');
-            div.className = 'product';
-            div.innerHTML = `
-              <h3>${name}</h3>
-              <p>Цена: ${price} тг</p>
-              ${imgUrl ? `<img src="${imgUrl}" onclick="addToCart({name: '${name}', price: ${price}}, this)">` : ''}
-              <button onclick="addToCart({name: '${name}', price: ${price}}, this.previousElementSibling)">В корзину</button>
-            `;
-            container.appendChild(div);
-          });
-        })
-        .catch(err => {
-          console.error("Ошибка при загрузке товаров:", err);
-        });
-    }
 
     function addToCart(product, imgElement) {
       const existing = cart.find(item => item.name === product.name);
