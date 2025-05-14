@@ -34,11 +34,6 @@
       width: calc(100% - 40px);
       box-sizing: border-box;
     }
-    .product img {
-      width: 100%;
-      height: auto;
-      display: block;
-    }
     @media (min-width: 600px) {
       #cart {
         width: 250px;
@@ -60,6 +55,9 @@
         display: inline-block;
         vertical-align: top;
       }
+    }
+    img {
+      max-width: 100%;
     }
     .form {
       margin-top: 10px;
@@ -86,14 +84,14 @@
       <input type="text" id="name" placeholder="Имя" />
       <input type="text" id="phone" placeholder="Телефон (WhatsApp)" />
       <textarea id="address" placeholder="Адрес доставки"></textarea>
-      <button id="order-btn">Заказать</button>
+      <button onclick="submitOrder()">Заказать</button>
     </div>
     <p id="status"></p>
   </div>
 
   <div id="main">
     <h1>Товары</h1>
-    <div id="products"></div>
+    <div id="products"><p>Загрузка товаров...</p></div>
   </div>
 
   <script>
@@ -128,7 +126,7 @@
       if (index > -1) {
         cart[index].quantity += 1;
       } else {
-        cart.push({ ...product, quantity: 1 });
+        cart.push({...product, quantity: 1});
       }
       localStorage.setItem('cart', JSON.stringify(cart));
       renderCart();
@@ -147,10 +145,7 @@
       renderCart();
     }
 
-    function submitOrder(event) {
-      const button = event.target;
-      button.disabled = true;
-
+    function submitOrder() {
       const name = document.getElementById('name').value.trim();
       const phone = document.getElementById('phone').value.trim();
       const address = document.getElementById('address').value.trim();
@@ -158,11 +153,8 @@
 
       if (!name || !phone || !address || cart.length === 0) {
         status.textContent = 'Пожалуйста, заполните все поля и добавьте товары в корзину.';
-        button.disabled = false;
         return;
       }
-
-      status.textContent = 'Отправка...';
 
       const products = cart.map(item =>
         `${item.name} × ${item.quantity} = ${item.price * item.quantity} тг`
@@ -189,55 +181,55 @@
         .catch(err => {
           status.textContent = 'Ошибка при отправке заказа.';
           console.error(err);
-        })
-        .finally(() => {
-          button.disabled = false;
         });
     }
 
     fetch('https://shrill-haze-b867.mironovka6.workers.dev/products')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('Ошибка загрузки: ' + res.status);
+        return res.json();
+      })
       .then(data => {
+        console.log('Загружены товары:', data);
         const container = document.getElementById('products');
+        container.innerHTML = ''; // очищаем от "Загрузка товаров..."
+
+        if (!Array.isArray(data) || data.length === 0) {
+          container.innerHTML = '<p>Нет доступных товаров</p>';
+          return;
+        }
+
         data.forEach(record => {
           const fields = record.fields;
-          const name = fields['Products'];
-          const price = Number(fields['Price']);
+          const name = fields['Products'] || 'Без названия';
+          const price = Number(fields['Price']) || 0;
           const imgUrl = fields['Image']?.[0]?.url;
-
-          if (!name || isNaN(price)) return;
 
           const div = document.createElement('div');
           div.className = 'product';
-          div.innerHTML = `<h3>${name}</h3><p>Цена: ${price} тг</p>`;
-          if (imgUrl) {
-            const img = document.createElement('img');
-            img.src = imgUrl;
-            div.appendChild(img);
-          }
-          const btn = document.createElement('button');
-          btn.textContent = 'В корзину';
-          btn.addEventListener('click', () => addToCart({ name, price }));
-          div.appendChild(btn);
-
+          div.innerHTML = `
+            <h3>${name}</h3>
+            <p>Цена: ${price} тг</p>
+            ${imgUrl ? `<img src="${imgUrl}" alt="${name}">` : ''}
+            <button onclick='addToCart({name: ${JSON.stringify(name)}, price: ${price}})'>В корзину</button>
+          `;
           container.appendChild(div);
         });
+      })
+      .catch(err => {
+        console.error('Ошибка загрузки товаров:', err);
+        document.getElementById('products').innerHTML = `
+          <p style="color:red">Ошибка загрузки товаров. Проверьте интернет-соединение.</p>
+        `;
       });
 
     window.onload = () => {
-      try {
-        const savedCart = localStorage.getItem('cart');
-        if (savedCart) {
-          const parsedCart = JSON.parse(savedCart);
-          if (Array.isArray(parsedCart)) {
-            parsedCart.forEach(item => cart.push(item));
-            renderCart();
-          }
-        }
-      } catch (e) {
-        console.warn('Ошибка чтения корзины:', e);
+      const savedCart = localStorage.getItem('cart');
+      if (savedCart) {
+        const parsedCart = JSON.parse(savedCart);
+        parsedCart.forEach(item => cart.push(item));
+        renderCart();
       }
-
       ['name', 'phone', 'address'].forEach(id => {
         const saved = localStorage.getItem(id);
         if (saved) document.getElementById(id).value = saved;
@@ -245,8 +237,6 @@
           localStorage.setItem(id, e.target.value);
         });
       });
-
-      document.getElementById('order-btn').addEventListener('click', submitOrder);
     };
 
     if ('serviceWorker' in navigator) {
