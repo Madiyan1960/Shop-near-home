@@ -146,6 +146,8 @@
     }
 
     function submitOrder() {
+      console.log("Функция submitOrder вызвана");
+
       const name = document.getElementById('name').value.trim();
       const phone = document.getElementById('phone').value.trim();
       const address = document.getElementById('address').value.trim();
@@ -153,6 +155,7 @@
 
       if (!name || !phone || !address || cart.length === 0) {
         status.textContent = 'Пожалуйста, заполните все поля и добавьте товары в корзину.';
+        console.log('Недостаточно данных или пустая корзина');
         return;
       }
 
@@ -163,31 +166,32 @@
       const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
       fetch('https://shrill-haze-b867.mironovka6.workers.dev/order', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ Name: name, Phone: phone, Address: address, Products: products, Total: total })
-})
-  .then(res => {
-    if (!res.ok) {
-      throw new Error('Ошибка при отправке данных');
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Name: name, Phone: phone, Address: address, Products: products, Total: total })
+      })
+      .then(res => {
+        if (!res.ok) {
+          console.error('Ошибка при отправке данных', res.status);
+          throw new Error('Ошибка при отправке данных');
+        }
+        return res.json();
+      })
+      .then(() => {
+        status.textContent = 'Заказ отправлен!';
+        cart.length = 0;
+        localStorage.removeItem('cart');
+        renderCart();
+        ['name', 'phone', 'address'].forEach(id => document.getElementById(id).value = '');
+        const waText = `Заказ:\nИмя: ${name}\nТел: ${phone}\nАдрес: ${address}\nТовары: ${products}\nИтого: ${total} тг`;
+        const waUrl = `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(waText)}`;
+        window.open(waUrl, '_blank');
+      })
+      .catch(err => {
+        status.textContent = 'Ошибка при отправке заказа.';
+        console.error(err);
+      });
     }
-    return res.json();
-  })
-  .then(() => {
-    status.textContent = 'Заказ отправлен!';
-    cart.length = 0;
-    localStorage.removeItem('cart');
-    renderCart();
-    ['name', 'phone', 'address'].forEach(id => document.getElementById(id).value = '');
-    const waText = `Заказ:\nИмя: ${name}\nТел: ${phone}\nАдрес: ${address}\nТовары: ${products}\nИтого: ${total} тг`;
-    const waUrl = `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(waText)}`;
-    window.open(waUrl, '_blank');
-  })
-  .catch(err => {
-    status.textContent = 'Ошибка при отправке заказа.';
-    console.error(err);
-  });
-
 
     fetch('https://shrill-haze-b867.mironovka6.workers.dev/products')
       .then(res => {
