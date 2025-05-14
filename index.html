@@ -163,26 +163,31 @@
       const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
       fetch('https://shrill-haze-b867.mironovka6.workers.dev/order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ Name: name, Phone: phone, Address: address, Products: products, Total: total })
-      })
-        .then(res => res.json())
-        .then(() => {
-          status.textContent = 'Заказ отправлен!';
-          cart.length = 0;
-          localStorage.removeItem('cart');
-          renderCart();
-          ['name', 'phone', 'address'].forEach(id => document.getElementById(id).value = '');
-          const waText = `Заказ:\nИмя: ${name}\nТел: ${phone}\nАдрес: ${address}\nТовары: ${products}\nИтого: ${total} тг`;
-          const waUrl = `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(waText)}`;
-          window.open(waUrl, '_blank');
-        })
-        .catch(err => {
-          status.textContent = 'Ошибка при отправке заказа.';
-          console.error(err);
-        });
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ Name: name, Phone: phone, Address: address, Products: products, Total: total })
+})
+  .then(res => {
+    if (!res.ok) {
+      throw new Error('Ошибка при отправке данных');
     }
+    return res.json();
+  })
+  .then(() => {
+    status.textContent = 'Заказ отправлен!';
+    cart.length = 0;
+    localStorage.removeItem('cart');
+    renderCart();
+    ['name', 'phone', 'address'].forEach(id => document.getElementById(id).value = '');
+    const waText = `Заказ:\nИмя: ${name}\nТел: ${phone}\nАдрес: ${address}\nТовары: ${products}\nИтого: ${total} тг`;
+    const waUrl = `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(waText)}`;
+    window.open(waUrl, '_blank');
+  })
+  .catch(err => {
+    status.textContent = 'Ошибка при отправке заказа.';
+    console.error(err);
+  });
+
 
     fetch('https://shrill-haze-b867.mironovka6.workers.dev/products')
       .then(res => {
